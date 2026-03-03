@@ -20,7 +20,12 @@ Vec3 missShader(const Ray& ray) {
     // White & SkyBlue
     return Math::lerp(Vec3{1.0f, 1.0f, 1.0f}, Vec3{0.5f, 0.7f, 1.0f}, t);
 }
-Vec3 hitShader() { return Vec3{1.0f, 0.0f, 0.0f}; }
+Vec3 hitShader(const Ray& ray, const HitResult& hitResult) {
+    float32 closestT = ((hitResult.tIn > 0.001f) ? hitResult.tIn : hitResult.tOut);
+    Vec3 normal = Math::normalize(ray.at(closestT) - hitResult.object->centerPos()) + 1;
+
+    return (normal * 0.5f);
+}
 
 void writeHeader(std::ofstream& writer) {
     writer << "P3\n";
@@ -64,7 +69,7 @@ int main() {
                 Ray ray(camera.pos, rayDir);
 
                 HitResult hitResult = Solver::hitTest(ray, sphere);
-                Vec3 color = (hitResult.isHit ? hitShader() : missShader(ray));
+                Vec3 color = (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
 
                 drawPixel(writer, color);
             }
