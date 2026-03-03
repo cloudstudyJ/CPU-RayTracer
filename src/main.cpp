@@ -21,8 +21,8 @@ Vec3 missShader(const Ray& ray) {
     return Math::lerp(Vec3{1.0f, 1.0f, 1.0f}, Vec3{0.5f, 0.7f, 1.0f}, t);
 }
 Vec3 hitShader(const Ray& ray, const HitResult& hitResult) {
-    float32 closestT = ((hitResult.tIn > 0.001f) ? hitResult.tIn : hitResult.tOut);
-    Vec3 normal = Math::normalize(ray.at(closestT) - hitResult.object->centerPos()) + 1;
+    float32 closestT = ((hitResult.tMin > Solver::T_MIN) ? hitResult.tMin : hitResult.tMax);
+    Vec3 normal = ((ray.at(closestT) - hitResult.object->centerPos()) / hitResult.object->radius()) + 1;
 
     return (normal * 0.5f);
 }

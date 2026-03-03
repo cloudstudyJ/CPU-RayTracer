@@ -6,7 +6,7 @@
 struct HitResult {
     bool isHit{};
 
-    float32 tIn{}, tOut{};
+    float32 tMin{}, tMax{};
 
     const Sphere* object{};
 };
