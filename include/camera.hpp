@@ -1,9 +1,10 @@
 #pragma once
 
+#include "types.hpp"
 #include "vec3.hpp"
 
 struct Camera {
-    float yFOV{90.0f};
+    float32 yFOV{90.0f};
 
     Vec3 pos;
 };

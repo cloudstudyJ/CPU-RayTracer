@@ -1,11 +1,13 @@
-#include <fstream>
-
 #include "types.hpp"
 #include "vec3.hpp"
 #include "ray.hpp"
 #include "camera.hpp"
 #include "viewport.hpp"
 #include "math.hpp"
+#include "sphere.hpp"
+#include "solver.hpp"
+
+#include <fstream>
 
 constexpr uint16 IMG_W = 400;
 constexpr uint16 IMG_H = 225;
@@ -13,10 +15,27 @@ constexpr float32 ASPECT_RATIO = static_cast<float32>(IMG_W) / IMG_H;
 
 Vec3 missShader(const Ray& ray) {
     // range from [-1, 1] to [0, 1]
-    float t = 0.5f * (Math::normalize(ray.direction()).y + 1.0f);
+    float32 t = 0.5f * (Math::normalize(ray.direction()).y + 1.0f);
 
     // White & SkyBlue
     return Math::lerp(Vec3{1.0f, 1.0f, 1.0f}, Vec3{0.5f, 0.7f, 1.0f}, t);
+}
+Vec3 hitShader() { return Vec3{1.0f, 0.0f, 0.0f}; }
+
+void writeHeader(std::ofstream& writer) {
+    writer << "P3\n";
+    writer << IMG_W << ' ' << IMG_H << '\n';
+    writer << 255 << '\n';
+}
+void drawPixel(std::ofstream& writer, const Vec3& color) {
+    // convert to 8-bits linear color space [0, 255]
+    uint8 iR = static_cast<uint8>(255.999f * color.r);
+    uint8 iG = static_cast<uint8>(255.999f * color.g);
+    uint8 iB = static_cast<uint8>(255.999f * color.b);
+
+    writer << static_cast<int32>(iR) << ' '
+           << static_cast<int32>(iG) << ' '
+           << static_cast<int32>(iB) << '\n';
 }
 
 int main() {
@@ -30,13 +49,12 @@ int main() {
     Vec3 viewportOrigin = camera.pos + Vec3{(-viewport.width) / 2, viewport.height / 2, -viewport.focalLength};
     Vec3 pixelOriginCenter = viewportOrigin + (dUV * 0.5f);
 
+    Sphere sphere(Vec3{0.0f, 0.0f, -1.0f}, 0.5f);
+
     {
         // render
         std::ofstream writer("result.ppm");
-
-        writer << "P3\n";
-        writer << IMG_W << ' ' << IMG_H << '\n';
-        writer << 255 << '\n';
+        writeHeader(writer);
 
         for (uint16 y = 0; y < IMG_H; ++y) {
             for (uint16 x = 0; x < IMG_W; ++x) {
@@ -44,16 +62,11 @@ int main() {
                 Vec3 rayDir = pixelCenter - camera.pos;
 
                 Ray ray(camera.pos, rayDir);
-                Vec3 color = missShader(ray);
 
-                // convert to 8-bits linear color space [0, 255]
-                uint8 iR = static_cast<uint8>(255.999f * color.r);
-                uint8 iG = static_cast<uint8>(255.999f * color.g);
-                uint8 iB = static_cast<uint8>(255.999f * color.b);
+                HitResult hitResult = Solver::hitTest(ray, sphere);
+                Vec3 color = (hitResult.isHit ? hitShader() : missShader(ray));
 
-                writer << static_cast<int32>(iR) << ' '
-                       << static_cast<int32>(iG) << ' '
-                       << static_cast<int32>(iB) << '\n';
+                drawPixel(writer, color);
             }
         }
     }
