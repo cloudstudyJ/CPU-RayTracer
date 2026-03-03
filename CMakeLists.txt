@@ -7,6 +7,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${CMAKE_BUILD_TYPE})
 
 project(RTIOW)
 
+file(
+    GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
+    ${CMAKE_SOURCE_DIR}/src/*.cpp
+)
+
+include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+)
+
 add_executable(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
