@@ -18,6 +18,5 @@ class Math {
         static Vec3 lerp(const Vec3& a, const Vec3& b, const float32 t) noexcept;
 
     public:
-        static constexpr float32 PI      = 3.141'592f;
-        static constexpr float32 EPSILON = 0.000'001f;
+        static constexpr float32 PI = 3.141'592f;
 };

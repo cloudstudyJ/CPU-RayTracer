@@ -1,18 +1,16 @@
 #pragma once
 
-#include "types.hpp"
-#include "vec3.hpp"
+#include "object.hpp"
 
-class Sphere {
+class Sphere: public Object {
     public:
-        Sphere() noexcept: mRadius(1.0f) {}
-        Sphere(const Vec3& centerPos, const float32 r = 1.0f) noexcept: mRadius(r), mCenterPos(centerPos) {}
+        Sphere() noexcept: Object() {}
+        Sphere(const Vec3& pos, const float32 r) noexcept: Object(pos), mRadius(r) {}
+
+        HitResult hitTest(const Ray& ray, const float32 tMin, const float32 tMax) override;
 
         float32 radius() const noexcept { return mRadius; }
-        Vec3 centerPos() const noexcept { return mCenterPos; }
 
     private:
-        float32 mRadius;
-
-        Vec3 mCenterPos;
+        float32 mRadius{1.0f};
 };

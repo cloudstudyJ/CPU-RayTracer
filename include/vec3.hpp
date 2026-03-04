@@ -17,5 +17,6 @@ struct Vec3 {
 
             struct { float32 x, y, z; };
             struct { float32 r, g, b; };
+            struct { float32 u, v, w; };
         };
 };

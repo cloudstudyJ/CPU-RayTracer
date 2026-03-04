@@ -5,7 +5,8 @@
 #include "viewport.hpp"
 #include "math.hpp"
 #include "sphere.hpp"
-#include "solver.hpp"
+#include "hitResult.hpp"
+#include "constants.hpp"
 
 #include <fstream>
 
@@ -20,12 +21,7 @@ Vec3 missShader(const Ray& ray) {
     // White & SkyBlue
     return Math::lerp(Vec3{1.0f, 1.0f, 1.0f}, Vec3{0.5f, 0.7f, 1.0f}, t);
 }
-Vec3 hitShader(const Ray& ray, const HitResult& hitResult) {
-    float32 closestT = ((hitResult.tMin > Solver::T_MIN) ? hitResult.tMin : hitResult.tMax);
-    Vec3 normal = ((ray.at(closestT) - hitResult.object->centerPos()) / hitResult.object->radius()) + 1;
-
-    return (normal * 0.5f);
-}
+Vec3 hitShader(const Ray& ray, const HitResult& hitResult) { return ((hitResult.normal + 1) * 0.5f); }
 
 void writeHeader(std::ofstream& writer) {
     writer << "P3\n";
@@ -68,7 +64,7 @@ int main() {
 
                 Ray ray(camera.pos, rayDir);
 
-                HitResult hitResult = Solver::hitTest(ray, sphere);
+                HitResult hitResult = sphere.hitTest(ray, RAY_T_MIN, INF_F32);
                 Vec3 color = (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
 
                 drawPixel(writer, color);

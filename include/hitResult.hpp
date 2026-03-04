@@ -1,12 +1,12 @@
 #pragma once
 
-#include "types.hpp"
-#include "sphere.hpp"
+#include "vec3.hpp"
 
 struct HitResult {
     bool isHit{};
 
-    float32 tMin{}, tMax{};
+    float32 hitT{};
 
-    const Sphere* object{};
+    Vec3 hitPoint;
+    Vec3 normal;
 };
