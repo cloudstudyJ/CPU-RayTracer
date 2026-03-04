@@ -7,6 +7,7 @@
 #include "sphere.hpp"
 #include "hitResult.hpp"
 #include "constants.hpp"
+#include "utility.hpp"
 
 #include <fstream>
 #include <vector>
@@ -16,8 +17,11 @@ constexpr uint16 IMG_W = 400;
 constexpr uint16 IMG_H = 225;
 constexpr float32 ASPECT_RATIO = static_cast<float32>(IMG_W) / IMG_H;
 
+constexpr uint16  SAMPLES_PER_PIXEL = 64;
+constexpr float32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
+
 Vec3 missShader(const Ray& ray) {
-    // range from [-1, 1] to [0, 1]
+    // move range from [-1, 1] to [0, 1]
     float32 t = 0.5f * (Math::normalize(ray.direction()).y + 1.0f);
 
     // White & SkyBlue
@@ -49,8 +53,8 @@ int main() {
     viewport.width  = viewport.height * ASPECT_RATIO;
 
     Vec3 dUV = Vec3{viewport.width / IMG_W, (-viewport.height) / IMG_H, 0.0f};
-    Vec3 viewportOrigin = camera.pos + Vec3{(-viewport.width) / 2, viewport.height / 2, -viewport.focalLength};
-    Vec3 pixelOriginCenter = viewportOrigin + (dUV * 0.5f);
+    Vec3 viewportLT = camera.pos + Vec3{(-viewport.width) / 2, viewport.height / 2, -viewport.focalLength};
+    Vec3 pixelOriginCenter = viewportLT + (dUV * 0.5f);
 
     std::vector<std::unique_ptr<Object>> objects;
     objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 0.0f, -1.0f}, 0.5f));
@@ -63,23 +67,25 @@ int main() {
 
         for (uint16 y = 0; y < IMG_H; ++y) {
             for (uint16 x = 0; x < IMG_W; ++x) {
-                Vec3 pixelCenter = pixelOriginCenter + Vec3{x * dUV.x, y * dUV.y, 0.0f};
-                Vec3 rayDir = pixelCenter - camera.pos;
-
-                Ray ray(camera.pos, rayDir);
-
                 Vec3 color;
-                HitResult hitResult;
 
-                for (const auto& object: objects) {
-                    HitResult currentHitResult = object->hitTest(ray, RAY_T_MIN, INF_F32);
+                for (uint16 sample = 0; sample < SAMPLES_PER_PIXEL; ++sample) {
+                    Vec3 jitter = {(x + Utility::random()) * dUV.x, (y + Utility::random()) * dUV.y, 0.0f};
+                    Vec3 samplePos = viewportLT + jitter;
+                    Ray ray(camera.pos, samplePos - camera.pos);
 
-                    if (currentHitResult.isHit && (currentHitResult.hitT < hitResult.hitT))
-                        hitResult = currentHitResult;
+                    HitResult hitResult;
+                    for (const auto& object: objects) {
+                        HitResult currentHitResult = object->hitTest(ray, RAY_T_MIN, hitResult.hitT);
+
+                        if (currentHitResult.isHit && (currentHitResult.hitT < hitResult.hitT))
+                            hitResult = currentHitResult;
+                    }
+
+                    color += (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
                 }
 
-                color = (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
-                drawPixel(writer, color);
+                drawPixel(writer, color * SAMPLE_SCALE);
             }
         }
     }

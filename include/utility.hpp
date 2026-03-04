@@ -2,8 +2,6 @@
 
 #include "types.hpp"
 
-#include <random>
-
 class Utility {
     public:
         // [0.0, 1.0)
@@ -20,8 +18,4 @@ class Utility {
             a = b;
             b = temp;
         }
-
-    private:
-        static std::random_device rd;
-        static std::mt19937       gen;
 };
