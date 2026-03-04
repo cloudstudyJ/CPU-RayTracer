@@ -9,6 +9,8 @@
 #include "constants.hpp"
 
 #include <fstream>
+#include <vector>
+#include <memory>
 
 constexpr uint16 IMG_W = 400;
 constexpr uint16 IMG_H = 225;
@@ -50,7 +52,9 @@ int main() {
     Vec3 viewportOrigin = camera.pos + Vec3{(-viewport.width) / 2, viewport.height / 2, -viewport.focalLength};
     Vec3 pixelOriginCenter = viewportOrigin + (dUV * 0.5f);
 
-    Sphere sphere(Vec3{0.0f, 0.0f, -1.0f}, 0.5f);
+    std::vector<std::unique_ptr<Object>> objects;
+    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 0.0f, -1.0f}, 0.5f));
+    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, -100.5f, -1.0f}, 100.0f));
 
     {
         // render
@@ -64,9 +68,17 @@ int main() {
 
                 Ray ray(camera.pos, rayDir);
 
-                HitResult hitResult = sphere.hitTest(ray, RAY_T_MIN, INF_F32);
-                Vec3 color = (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
+                Vec3 color;
+                HitResult hitResult;
 
+                for (const auto& object: objects) {
+                    HitResult currentHitResult = object->hitTest(ray, RAY_T_MIN, INF_F32);
+
+                    if (currentHitResult.isHit && (currentHitResult.hitT < hitResult.hitT))
+                        hitResult = currentHitResult;
+                }
+
+                color = (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
                 drawPixel(writer, color);
             }
         }
