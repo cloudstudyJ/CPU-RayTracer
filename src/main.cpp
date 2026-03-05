@@ -61,10 +61,17 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
     return missShader(scatterRay) * 0.5f;
 }
 
+Vec3 gammaCorrection(const Vec3& linearColor) {
+    return {
+        ((linearColor.x > 0.0f) ? Math::sqrt(linearColor.x) : 0.0f),
+        ((linearColor.y > 0.0f) ? Math::sqrt(linearColor.y) : 0.0f),
+        ((linearColor.z > 0.0f) ? Math::sqrt(linearColor.z) : 0.0f)
+    };
+}
 void takeScreenshot() {
     for (uint16 y = 0; y < IMG_H; ++y) {
         for (uint16 x = 0; x < IMG_W; ++x) {
-            const Vec3& color = framebuffer[y * IMG_W + x];
+            const Vec3 color = gammaCorrection(framebuffer[y * IMG_W + x]);
 
             // convert to 8-bits linear color space [0, 255]
             uint32 idx = (y * IMG_W + x) * 3;
@@ -154,6 +161,7 @@ int main() {
     writeImage();
 
     std::cout << "Threads: " << THREADS << '\n';
+    std::cout << "Max Ray-Bounces: " << MAX_RAY_BOUNCES << '\n';
     std::cout << "Resolution: " << IMG_W << 'x' << IMG_H << '\n';
     std::cout << "SPP: " << SAMPLES_PER_PIXEL << '\n';
     std::cout << "Render Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " [ms]\n";
