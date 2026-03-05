@@ -8,6 +8,7 @@
 #include "hitResult.hpp"
 #include "constants.hpp"
 #include "utility.hpp"
+#include "random.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -24,38 +25,43 @@ constexpr float32 ASPECT_RATIO = static_cast<float32>(IMG_W) / IMG_H;
 constexpr uint16  SAMPLES_PER_PIXEL = 64;
 constexpr float32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
 
+const uint32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
+
+std::vector<Vec3>  framebuffer(IMG_W * IMG_H);
+std::vector<uint8> snapshot(IMG_W * IMG_H * 3);
+
 Vec3 missShader(const Ray& ray) {
     // move range from [-1, 1] to [0, 1]
-    float32 t = 0.5f * (Math::normalize(ray.direction()).y + 1.0f);
+    float32 t = 0.5f * (ray.direction.normalize().y + 1.0f);
 
     // White & SkyBlue
-    return Math::lerp(Vec3{1.0f, 1.0f, 1.0f}, Vec3{0.5f, 0.7f, 1.0f}, t);
+    return Vec3::lerp({1.0f, 1.0f, 1.0f}, {0.5f, 0.7f, 1.0f}, t);
 }
 Vec3 hitShader(const Ray& ray, const HitResult& hitResult) { return ((hitResult.normal + 1) * 0.5f); }
 
-void writeImage(const std::vector<Vec3>& framebuffer) {
-    std::ofstream writer("result.ppm");
-
-    // write header
-    writer << "P3\n";
-    writer << IMG_W << ' ' << IMG_H << '\n';
-    writer << 255 << '\n';
-
-    // write image data
+void takeScreenshot() {
     for (uint16 y = 0; y < IMG_H; ++y) {
         for (uint16 x = 0; x < IMG_W; ++x) {
             const Vec3& color = framebuffer[y * IMG_W + x];
 
             // convert to 8-bits linear color space [0, 255]
-            uint8 iR = static_cast<uint8>(255.999f * color.r);
-            uint8 iG = static_cast<uint8>(255.999f * color.g);
-            uint8 iB = static_cast<uint8>(255.999f * color.b);
-
-            writer << static_cast<int32>(iR) << ' '
-                   << static_cast<int32>(iG) << ' '
-                   << static_cast<int32>(iB) << '\n';
+            uint32 idx = (y * IMG_W + x) * 3;
+            snapshot[idx    ] = static_cast<uint8>(255.999f * color.r);
+            snapshot[idx + 1] = static_cast<uint8>(255.999f * color.g);
+            snapshot[idx + 2] = static_cast<uint8>(255.999f * color.b);
         }
     }
+}
+void writeImage() {
+    std::ofstream writer("result.ppm", std::ios::binary);
+
+    // write header
+    writer << "P6\n";
+    writer << IMG_W << ' ' << IMG_H << '\n';
+    writer << 255 << '\n';
+
+    // write image data
+    writer.write(reinterpret_cast<char*>(snapshot.data()), snapshot.size());
 }
 
 int main() {
@@ -73,15 +79,12 @@ int main() {
     objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 0.0f, -1.0f}, 0.5f));
     objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, -100.5f, -1.0f}, 100.0f));
 
-    std::vector<Vec3> framebuffer(IMG_W * IMG_H);
     std::vector<std::thread> threads;
+    threads.reserve(THREADS);
 
     std::chrono::steady_clock::time_point start, end;
     start = std::chrono::steady_clock::now();
     {
-        const uint32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
-        threads.reserve(THREADS);
-
         std::atomic<uint32> nextChunk{};
 
         auto render = [&]() {
@@ -97,7 +100,7 @@ int main() {
                         Vec3 color;
 
                         for (uint16 sample = 0; sample < SAMPLES_PER_PIXEL; ++sample) {
-                            Vec3 jitter    = {(x + Utility::random()) * dUV.x, (y + Utility::random()) * dUV.y, 0.0f};
+                            Vec3 jitter    = {(x + Random::uniform()) * dUV.x, (y + Random::uniform()) * dUV.y, 0.0f};
                             Vec3 samplePos = viewportLT + jitter;
                             Ray  ray       = {camera.pos, samplePos - camera.pos};
 
@@ -125,12 +128,14 @@ int main() {
             thread.join();
     }
     end = std::chrono::steady_clock::now();
-    writeImage(framebuffer);
 
+    takeScreenshot();
+    writeImage();
+
+    std::cout << "Threads: " << THREADS << '\n';
     std::cout << "Resolution: " << IMG_W << 'x' << IMG_H << '\n';
     std::cout << "SPP: " << SAMPLES_PER_PIXEL << '\n';
-    std::cout << "Render Time: ";
-    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " [ms]\n";
+    std::cout << "Render Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " [ms]\n";
 
     return 0;
 }

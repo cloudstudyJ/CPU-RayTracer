@@ -6,12 +6,11 @@
 HitResult Sphere::hitTest(const Ray& ray, const float32 tMin, const float32 tMax) {
     HitResult hitResult;
 
-    Vec3 ac = mPos - ray.origin();
-    Vec3 rayDir = ray.direction();
+    Vec3 ac = mPos - ray.origin;
 
-    float32 a = rayDir.dot(rayDir);
-    float32 h = ac.dot(rayDir);
-    float32 c = ac.dot(ac) - mRadius * mRadius;
+    float32 a = Vec3::dot(ray.direction, ray.direction);
+    float32 h = Vec3::dot(ray.direction, ac);
+    float32 c = Vec3::dot(ac, ac) - mRadius * mRadius;
 
     float32 discriminant = h * h - a * c;
     if (discriminant < -EPS_F32)
