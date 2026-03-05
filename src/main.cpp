@@ -22,13 +22,16 @@ constexpr uint16 IMG_W = 400;
 constexpr uint16 IMG_H = 225;
 constexpr float32 ASPECT_RATIO = static_cast<float32>(IMG_W) / IMG_H;
 
-constexpr uint16  SAMPLES_PER_PIXEL = 64;
+constexpr uint16  SAMPLES_PER_PIXEL = 100;
 constexpr float32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
 
 const uint32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
+const uint16 MAX_RAY_BOUNCES = 50;
 
 std::vector<Vec3>  framebuffer(IMG_W * IMG_H);
 std::vector<uint8> snapshot(IMG_W * IMG_H * 3);
+
+std::vector<std::unique_ptr<Object>> objects;
 
 Vec3 missShader(const Ray& ray) {
     // move range from [-1, 1] to [0, 1]
@@ -37,7 +40,26 @@ Vec3 missShader(const Ray& ray) {
     // White & SkyBlue
     return Vec3::lerp({1.0f, 1.0f, 1.0f}, {0.5f, 0.7f, 1.0f}, t);
 }
-Vec3 hitShader(const Ray& ray, const HitResult& hitResult) { return ((hitResult.normal + 1) * 0.5f); }
+Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
+    if (depth > MAX_RAY_BOUNCES)
+        return {};
+
+    Vec3 scatterDir = hitResult.normal + Random::uniformSphere();
+    Ray  scatterRay = {hitResult.hitPoint, scatterDir};
+
+    HitResult bounceHitResult;
+    for (const auto& object: objects) {
+        HitResult currentHitResult = object->hitTest(scatterRay, RAY_T_MIN, bounceHitResult.hitT);
+
+        if (currentHitResult.isHit)
+            bounceHitResult = currentHitResult;
+    }
+
+    if (bounceHitResult.isHit)
+        return hitShader(scatterRay, bounceHitResult, depth + 1) * 0.5f;
+
+    return missShader(scatterRay) * 0.5f;
+}
 
 void takeScreenshot() {
     for (uint16 y = 0; y < IMG_H; ++y) {
@@ -75,7 +97,6 @@ int main() {
     Vec3 viewportLT = camera.pos + Vec3{(-viewport.width) / 2, viewport.height / 2, -viewport.focalLength};
     Vec3 pixelOriginCenter = viewportLT + (dUV * 0.5f);
 
-    std::vector<std::unique_ptr<Object>> objects;
     objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 0.0f, -1.0f}, 0.5f));
     objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, -100.5f, -1.0f}, 100.0f));
 
