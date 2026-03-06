@@ -9,6 +9,7 @@
 #include "constants.hpp"
 #include "utility.hpp"
 #include "random.hpp"
+#include "materials/materials.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -22,11 +23,11 @@ constexpr uint16 IMG_W = 400;
 constexpr uint16 IMG_H = 225;
 constexpr float32 ASPECT_RATIO = static_cast<float32>(IMG_W) / IMG_H;
 
-constexpr uint16  SAMPLES_PER_PIXEL = 100;
+constexpr uint16  SAMPLES_PER_PIXEL = 50;
 constexpr float32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
 
 const uint32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
-const uint16 MAX_RAY_BOUNCES = 50;
+const uint16 MAX_RAY_BOUNCES = 8;
 
 std::vector<Vec3>  framebuffer(IMG_W * IMG_H);
 std::vector<uint8> snapshot(IMG_W * IMG_H * 3);
@@ -44,21 +45,20 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
     if (depth > MAX_RAY_BOUNCES)
         return {};
 
-    Vec3 scatterDir = hitResult.normal + Random::uniformSphere();
-    Ray  scatterRay = {hitResult.hitPoint, scatterDir};
+    SampleResult sample = hitResult.material->sample(ray, hitResult);
 
     HitResult bounceHitResult;
     for (const auto& object: objects) {
-        HitResult currentHitResult = object->hitTest(scatterRay, RAY_T_MIN, bounceHitResult.hitT);
+        HitResult currentHitResult = object->hitTest(sample.wo, RAY_T_MIN, bounceHitResult.hitT);
 
         if (currentHitResult.isHit)
             bounceHitResult = currentHitResult;
     }
 
     if (bounceHitResult.isHit)
-        return hitShader(scatterRay, bounceHitResult, depth + 1) * 0.5f;
+        return sample.albedo * hitShader(sample.wo, bounceHitResult, depth + 1);
 
-    return missShader(scatterRay) * 0.5f;
+    return missShader(sample.wo) * sample.albedo;
 }
 
 Vec3 gammaCorrection(const Vec3& linearColor) {
@@ -104,8 +104,15 @@ int main() {
     Vec3 viewportLT = camera.pos + Vec3{(-viewport.width) / 2, viewport.height / 2, -viewport.focalLength};
     Vec3 pixelOriginCenter = viewportLT + (dUV * 0.5f);
 
-    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 0.0f, -1.0f}, 0.5f));
-    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, -100.5f, -1.0f}, 100.0f));
+    auto material_ground = std::make_shared<Lambertian>(Vec3{0.8f, 0.8f, 0.0f});
+    auto material_center = std::make_shared<Lambertian>(Vec3{0.1f, 0.2f, 0.5f});
+    auto material_left   = std::make_shared<Metal>(Vec3{0.8f, 0.8f, 0.8f}, 0.3f);
+    auto material_right  = std::make_shared<Metal>(Vec3{0.8f, 0.6f, 0.2f}, 1.0f);
+
+    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, -100.5f, -1.0f}, 100.0f, material_ground));
+    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 0.0f, -1.2f}, 0.5f, material_center));
+    objects.push_back(std::make_unique<Sphere>(Vec3{-1.0f, 0.0f, -1.0f}, 0.5f, material_left));
+    objects.push_back(std::make_unique<Sphere>(Vec3{1.0f, 0.0f, -1.0f}, 0.5f, material_right));
 
     std::vector<std::thread> threads;
     threads.reserve(THREADS);
@@ -132,6 +139,7 @@ int main() {
                             Vec3 samplePos = viewportLT + jitter;
                             Ray  ray       = {camera.pos, samplePos - camera.pos};
 
+                            // primary ray
                             HitResult hitResult;
                             for (const auto& object: objects) {
                                 HitResult currentHitResult = object->hitTest(ray, RAY_T_MIN, hitResult.hitT);

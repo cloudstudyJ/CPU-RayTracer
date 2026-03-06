@@ -3,6 +3,9 @@
 #include "vec3.hpp"
 #include "constants.hpp"
 
+// fwd
+struct Material;
+
 struct HitResult {
     bool isHit{};
 
@@ -10,4 +13,6 @@ struct HitResult {
 
     Vec3 hitPoint;
     Vec3 normal;
+
+    Material* material{};
 };

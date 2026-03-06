@@ -35,6 +35,7 @@ HitResult Sphere::hitTest(const Ray& ray, const float32 tMin, const float32 tMax
     hitResult.isHit    = true;
     hitResult.hitPoint = ray.at(hitResult.hitT);
     hitResult.normal   = (hitResult.hitPoint - mPos) / mRadius;
+    hitResult.material = mMaterial.get();
 
     return hitResult;
 }
