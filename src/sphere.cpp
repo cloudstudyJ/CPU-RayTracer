@@ -32,10 +32,14 @@ HitResult Sphere::hitTest(const Ray& ray, const float32 tMin, const float32 tMax
             return hitResult;
     }
 
-    hitResult.isHit    = true;
-    hitResult.hitPoint = ray.at(hitResult.hitT);
-    hitResult.normal   = (hitResult.hitPoint - mPos) / mRadius;
-    hitResult.material = mMaterial.get();
+    hitResult.isHit        = true;
+    hitResult.hitPoint     = ray.at(hitResult.hitT);
+    hitResult.normal       = (hitResult.hitPoint - mPos) / mRadius;
+    hitResult.material     = mMaterial.get();
+    hitResult.wasRayInside = (Vec3::dot(ray.direction, hitResult.normal) >= 0.0f);
+
+    if (hitResult.wasRayInside)
+        hitResult.normal = -hitResult.normal;
 
     return hitResult;
 }

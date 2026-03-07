@@ -23,11 +23,11 @@ constexpr uint16 IMG_W = 400;
 constexpr uint16 IMG_H = 225;
 constexpr float32 ASPECT_RATIO = static_cast<float32>(IMG_W) / IMG_H;
 
-constexpr uint16  SAMPLES_PER_PIXEL = 50;
+constexpr uint16  SAMPLES_PER_PIXEL = 100;
 constexpr float32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
 
 const uint32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
-const uint16 MAX_RAY_BOUNCES = 8;
+const uint16 MAX_RAY_BOUNCES = 50;
 
 std::vector<Vec3>  framebuffer(IMG_W * IMG_H);
 std::vector<uint8> snapshot(IMG_W * IMG_H * 3);
@@ -106,12 +106,14 @@ int main() {
 
     auto material_ground = std::make_shared<Lambertian>(Vec3{0.8f, 0.8f, 0.0f});
     auto material_center = std::make_shared<Lambertian>(Vec3{0.1f, 0.2f, 0.5f});
-    auto material_left   = std::make_shared<Metal>(Vec3{0.8f, 0.8f, 0.8f}, 0.3f);
+    auto material_left   = std::make_shared<Dielectric>(1.5f);
+    auto material_bubble = std::make_shared<Dielectric>(1 / 1.5f);
     auto material_right  = std::make_shared<Metal>(Vec3{0.8f, 0.6f, 0.2f}, 1.0f);
 
     objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, -100.5f, -1.0f}, 100.0f, material_ground));
     objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 0.0f, -1.2f}, 0.5f, material_center));
     objects.push_back(std::make_unique<Sphere>(Vec3{-1.0f, 0.0f, -1.0f}, 0.5f, material_left));
+    objects.push_back(std::make_unique<Sphere>(Vec3{-1.0f, 0.0f, -1.0f}, 0.4f, material_bubble));
     objects.push_back(std::make_unique<Sphere>(Vec3{1.0f, 0.0f, -1.0f}, 0.5f, material_right));
 
     std::vector<std::thread> threads;
