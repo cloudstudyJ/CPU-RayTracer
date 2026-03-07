@@ -9,7 +9,11 @@ class Random {
         // [from, to)
         static float32 uniform(const float32 from, const float32 to) { return (from + (to - from) * uniform()); }
 
+        // [0.0f, 1.0f)
+        static Vec3 uniformVec3() { return {uniform(), uniform(), uniform()}; }
+        // [from, to)
         static Vec3 uniformVec3(const float32 from, const float32 to);
+
         static Vec3 uniformSphere();
         static Vec3 uniformHemisphere(const Vec3& normal);
 };

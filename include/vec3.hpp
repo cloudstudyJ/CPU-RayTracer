@@ -23,6 +23,7 @@ struct Vec3 {
         bool isZero() const noexcept { return (lengthSquare() < 1.0e-12f); }
 
         static float32 dot(const Vec3& a, const Vec3& b) noexcept { return (a.x * b.x + a.y * b.y + a.z * b.z); }
+        static inline Vec3 cross(const Vec3& a, const Vec3& b) noexcept;
 
         static Vec3 reflect(const Vec3& v, const Vec3& n) noexcept { return {v - n * (2 * Vec3::dot(v, n))}; }
         static Vec3 lerp(const Vec3& a, const Vec3& b, const float32 t) noexcept { return (a + (b - a) * t); }
@@ -43,4 +44,12 @@ inline Vec3& Vec3::operator+=(const Vec3& v) noexcept {
     z += v.z;
 
     return *this;
+}
+
+inline Vec3 Vec3::cross(const Vec3& a, const Vec3& b) noexcept {
+    return {
+        a.y * b.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x
+    };
 }

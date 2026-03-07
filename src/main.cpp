@@ -19,15 +19,17 @@
 #include <thread>
 #include <atomic>
 
-constexpr uint16 IMG_W = 400;
-constexpr uint16 IMG_H = 225;
+constexpr uint16 IMG_W = 1200;
+constexpr uint16 IMG_H = 675;
 constexpr float32 ASPECT_RATIO = static_cast<float32>(IMG_W) / IMG_H;
 
-constexpr uint16  SAMPLES_PER_PIXEL = 100;
+constexpr uint16  SAMPLES_PER_PIXEL = 500;
 constexpr float32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
+constexpr uint16 MAX_RAY_BOUNCES = 50;
+
+constexpr Vec3 worldY = {0.0f, 1.0f, 0.0f};
 
 const uint32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
-const uint16 MAX_RAY_BOUNCES = 50;
 
 std::vector<Vec3>  framebuffer(IMG_W * IMG_H);
 std::vector<uint8> snapshot(IMG_W * IMG_H * 3);
@@ -95,26 +97,61 @@ void writeImage() {
 
 int main() {
     Camera camera;
-    Viewport viewport;
+    camera.yfov = 20.0f;
+    camera.pos  = {13.0f, 2.0f, 3.0f};
 
-    viewport.height = 2 * viewport.focalLength * Math::tan(camera.yFOV / 2);
+    Vec3 nz = camera.pos - camera.look;
+    float32 focalLength = nz.length();
+
+    Viewport viewport;
+    viewport.height = 2 * focalLength * Math::tan(camera.yfov / 2);
     viewport.width  = viewport.height * ASPECT_RATIO;
 
-    Vec3 dUV = Vec3{viewport.width / IMG_W, (-viewport.height) / IMG_H, 0.0f};
-    Vec3 viewportLT = camera.pos + Vec3{(-viewport.width) / 2, viewport.height / 2, -viewport.focalLength};
-    Vec3 pixelOriginCenter = viewportLT + (dUV * 0.5f);
+    Vec3 z = nz.normalize();
+    Vec3 x = Vec3::cross(worldY, z).normalize();
+    Vec3 y = Vec3::cross(z, x);
 
-    auto material_ground = std::make_shared<Lambertian>(Vec3{0.8f, 0.8f, 0.0f});
-    auto material_center = std::make_shared<Lambertian>(Vec3{0.1f, 0.2f, 0.5f});
-    auto material_left   = std::make_shared<Dielectric>(1.5f);
-    auto material_bubble = std::make_shared<Dielectric>(1 / 1.5f);
-    auto material_right  = std::make_shared<Metal>(Vec3{0.8f, 0.6f, 0.2f}, 1.0f);
+    Vec3 viewportU = x * viewport.width;
+    Vec3 viewportV = y * -viewport.height;
 
-    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, -100.5f, -1.0f}, 100.0f, material_ground));
-    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 0.0f, -1.2f}, 0.5f, material_center));
-    objects.push_back(std::make_unique<Sphere>(Vec3{-1.0f, 0.0f, -1.0f}, 0.5f, material_left));
-    objects.push_back(std::make_unique<Sphere>(Vec3{-1.0f, 0.0f, -1.0f}, 0.4f, material_bubble));
-    objects.push_back(std::make_unique<Sphere>(Vec3{1.0f, 0.0f, -1.0f}, 0.5f, material_right));
+    Vec3 viewportdU = viewportU / IMG_W;
+    Vec3 viewportdV = viewportV / IMG_H;
+    Vec3 viewportLT = camera.pos - (viewportU / 2.0f) - (viewportV / 2.0f) - nz;
+
+    auto material_ground = std::make_shared<Lambertian>(Vec3{0.5f, 0.5f, 0.5f});
+    auto material_glass  = std::make_shared<Dielectric>(1.5f);
+    auto material_1      = std::make_shared<Lambertian>(Vec3{0.4f, 0.2f, 0.1f});
+    auto material_2      = std::make_shared<Metal>(Vec3{0.7f, 0.6f, 0.5f}, 0.0f);
+
+    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, -1000.0f, 0.0f}, 1000.0f, material_ground));
+    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 1.0f, 0.0f}, 1.0f, material_glass));
+    objects.push_back(std::make_unique<Sphere>(Vec3{-4.0f, 1.0f, 0.0f}, 1.0f, material_1));
+    objects.push_back(std::make_unique<Sphere>(Vec3{4.0f, 1.0f, 0.0f}, 1.0f, material_2));
+
+    for (int i = -11; i < 11; ++i) {
+        for (int j = -11; j < 11; ++j) {
+            float32 matSelector = Random::uniform();
+            Vec3 objPos = {i + 0.9f * Random::uniform(), 0.2f, j + 0.9f * Random::uniform()};
+
+            if ((objPos - Vec3{4.0f, -0.2f, 0.0f}).length() > 0.9f) {
+                std::shared_ptr<Material> objMaterial;
+
+                // diffuse
+                if (matSelector < 0.8f)
+                    objMaterial = std::make_shared<Lambertian>(Random::uniformVec3() * Random::uniformVec3());
+
+                // metal
+                else if (matSelector < 0.95f)
+                    objMaterial = std::make_shared<Metal>(Random::uniformVec3(0.5f, 1.0f), Random::uniform(0.0f, 0.5f));
+
+                // glass
+                else
+                    objMaterial = material_glass;
+
+                objects.push_back(std::make_unique<Sphere>(objPos, 0.2f, objMaterial));
+            }
+        }
+    }
 
     std::vector<std::thread> threads;
     threads.reserve(THREADS);
@@ -137,7 +174,7 @@ int main() {
                         Vec3 color;
 
                         for (uint16 sample = 0; sample < SAMPLES_PER_PIXEL; ++sample) {
-                            Vec3 jitter    = {(x + Random::uniform()) * dUV.x, (y + Random::uniform()) * dUV.y, 0.0f};
+                            Vec3 jitter = (viewportdU * (x + Random::uniform())) + (viewportdV * (y + Random::uniform()));
                             Vec3 samplePos = viewportLT + jitter;
                             Ray  ray       = {camera.pos, samplePos - camera.pos};
 
@@ -171,9 +208,9 @@ int main() {
     writeImage();
 
     std::cout << "Threads: " << THREADS << '\n';
-    std::cout << "Max Ray-Bounces: " << MAX_RAY_BOUNCES << '\n';
     std::cout << "Resolution: " << IMG_W << 'x' << IMG_H << '\n';
-    std::cout << "SPP: " << SAMPLES_PER_PIXEL << '\n';
+    std::cout << "Max Ray Bounces: " << MAX_RAY_BOUNCES << '\n';
+    std::cout << "Samples Per Pixel: " << SAMPLES_PER_PIXEL << '\n';
     std::cout << "Render Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " [ms]\n";
 
     return 0;
