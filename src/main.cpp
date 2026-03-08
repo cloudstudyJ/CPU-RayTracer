@@ -18,6 +18,7 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <mutex>
 
 constexpr uint16 IMG_W = 1200;
 constexpr uint16 IMG_H = 675;
@@ -69,30 +70,6 @@ Vec3 gammaCorrection(const Vec3& linearColor) {
         ((linearColor.y > 0.0f) ? Math::sqrt(linearColor.y) : 0.0f),
         ((linearColor.z > 0.0f) ? Math::sqrt(linearColor.z) : 0.0f)
     };
-}
-void takeScreenshot() {
-    for (uint16 y = 0; y < IMG_H; ++y) {
-        for (uint16 x = 0; x < IMG_W; ++x) {
-            const Vec3 color = gammaCorrection(framebuffer[y * IMG_W + x]);
-
-            // convert to 8-bits linear color space [0, 255]
-            uint32 idx = (y * IMG_W + x) * 3;
-            snapshot[idx    ] = static_cast<uint8>(255.999f * color.r);
-            snapshot[idx + 1] = static_cast<uint8>(255.999f * color.g);
-            snapshot[idx + 2] = static_cast<uint8>(255.999f * color.b);
-        }
-    }
-}
-void writeImage() {
-    std::ofstream writer("result.ppm", std::ios::binary);
-
-    // write header
-    writer << "P6\n";
-    writer << IMG_W << ' ' << IMG_H << '\n';
-    writer << 255 << '\n';
-
-    // write image data
-    writer.write(reinterpret_cast<char*>(snapshot.data()), snapshot.size());
 }
 
 int main() {
@@ -160,6 +137,7 @@ int main() {
     start = std::chrono::steady_clock::now();
     {
         std::atomic<uint32> nextChunk{};
+        std::mutex writeMutex;
 
         auto render = [&]() {
             while (true) {
@@ -189,9 +167,31 @@ int main() {
 
                             color += (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
                         }
+                        color *= SAMPLE_SCALE;
 
-                        framebuffer[y * IMG_W + x] = color * SAMPLE_SCALE;
+                        uint32 idx = (y * IMG_W + x);
+
+                        framebuffer[idx] = color;
+                        color = gammaCorrection(color);
+
+                        snapshot[idx * 3    ] = static_cast<uint8>(255.999f * color.r);
+                        snapshot[idx * 3 + 1] = static_cast<uint8>(255.999f * color.g);
+                        snapshot[idx * 3 + 2] = static_cast<uint8>(255.999f * color.b);
                     }
+                }
+
+                // progress write
+                {
+                    std::lock_guard<std::mutex> lock(writeMutex);
+                    std::ofstream writer("result.ppm", std::ios::binary);
+
+                    // write header
+                    writer << "P6\n";
+                    writer << IMG_W << ' ' << IMG_H << '\n';
+                    writer << 255 << '\n';
+
+                    // write image data
+                    writer.write(reinterpret_cast<const char*>(snapshot.data()), IMG_W * yTo * 3);
                 }
             }
         };
@@ -203,9 +203,6 @@ int main() {
             thread.join();
     }
     end = std::chrono::steady_clock::now();
-
-    takeScreenshot();
-    writeImage();
 
     std::cout << "Threads: " << THREADS << '\n';
     std::cout << "Resolution: " << IMG_W << 'x' << IMG_H << '\n';

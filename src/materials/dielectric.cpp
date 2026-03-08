@@ -2,11 +2,14 @@
 #include "math.hpp"
 #include "random.hpp"
 
-float32 schlickApprox(const float32 cos, float refractiveIndex) {
-    float r0 = (1 - refractiveIndex) / (1 + refractiveIndex);
+float32 schlickApprox(const float32 cos, const float32 refractiveIndex) noexcept {
+    float32 r0 = (1 - refractiveIndex) / (1 + refractiveIndex);
     r0 *= r0;
 
-    return r0 + (1 - r0) * Math::pow(1 - cos, 5);
+    float32 x  = 1 - cos;
+    float32 x2 = x * x;
+
+    return r0 + (1 - r0) * (x2 * x2 * x);
 }
 
 SampleResult Dielectric::sample(const Ray& wi, const HitResult& surfaceInfo) {

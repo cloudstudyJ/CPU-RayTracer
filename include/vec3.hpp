@@ -4,6 +4,7 @@
 
 struct Vec3 {
     public:
+        inline Vec3& operator*=(const float32 s) noexcept;
         inline Vec3& operator+=(const Vec3& v) noexcept;
 
         Vec3 operator*(const float32 s) const noexcept { return {x * s, y * s, z * s}; }
@@ -38,6 +39,13 @@ struct Vec3 {
         };
 };
 
+inline Vec3& Vec3::operator*=(const float32 s) noexcept {
+    x *= s;
+    y *= s;
+    z *= s;
+
+    return *this;
+}
 inline Vec3& Vec3::operator+=(const Vec3& v) noexcept {
     x += v.x;
     y += v.y;
