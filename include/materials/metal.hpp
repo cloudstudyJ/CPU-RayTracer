@@ -7,7 +7,7 @@ struct Metal: public Material {
         Metal() noexcept: roughness(0.1f) {}
         Metal(const Vec3& albedo, const float32 roughness) noexcept: albedo(albedo), roughness(roughness) {}
 
-        SampleResult sample(const Ray& wi, const HitResult& surfaceInfo) override;
+        SampleResult sample(const Ray& wi, const HitResult& surfaceInfo) const override;
 
     public:
         float32 roughness;

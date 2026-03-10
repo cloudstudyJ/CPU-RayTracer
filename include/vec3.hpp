@@ -4,12 +4,16 @@
 
 struct Vec3 {
     public:
+        constexpr Vec3() noexcept = default;
+        constexpr Vec3(const float32 a, const float32 b, const float32 c) noexcept: data{a, b, c} {}
+
         inline Vec3& operator*=(const float32 s) noexcept;
         inline Vec3& operator+=(const Vec3& v) noexcept;
 
         Vec3 operator*(const float32 s) const noexcept { return {x * s, y * s, z * s}; }
         Vec3 operator/(const float32 s) const { return {x / s, y / s, z / s}; }
         Vec3 operator+(const float32 s) const noexcept { return {x + s, y + s, z + s}; }
+        Vec3 operator-(const float32 s) const noexcept { return {x - s, y - s, z - s}; }
         Vec3 operator*(const Vec3& v) const noexcept { return {x * v.x, y * v.y, z * v.z}; }
         Vec3 operator+(const Vec3& v) const noexcept { return {x + v.x, y + v.y, z + v.z}; }
         Vec3 operator-(const Vec3& v) const noexcept { return {x - v.x, y - v.y, z - v.z}; }

@@ -2,7 +2,7 @@
 
 #include "random.hpp"
 
-SampleResult Metal::sample(const Ray& wi, const HitResult& surfaceInfo) {
+SampleResult Metal::sample(const Ray& wi, const HitResult& surfaceInfo) const {
     SampleResult sampleResult;
 
     Vec3 sampleDir = Vec3::reflect(wi.direction, surfaceInfo.normal).normalize();

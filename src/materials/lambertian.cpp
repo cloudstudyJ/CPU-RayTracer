@@ -2,7 +2,7 @@
 
 #include "random.hpp"
 
-SampleResult Lambertian::sample(const Ray& wi, const HitResult& surfaceInfo) {
+SampleResult Lambertian::sample(const Ray& wi, const HitResult& surfaceInfo) const {
     SampleResult sampleResult;
 
     Vec3 sampleDir = surfaceInfo.normal + Random::uniformSphere();

@@ -12,7 +12,7 @@ float32 schlickApprox(const float32 cos, const float32 refractiveIndex) noexcept
     return r0 + (1 - r0) * (x2 * x2 * x);
 }
 
-SampleResult Dielectric::sample(const Ray& wi, const HitResult& surfaceInfo) {
+SampleResult Dielectric::sample(const Ray& wi, const HitResult& surfaceInfo) const {
     SampleResult sampleResult;
 
     Vec3 in = wi.direction.normalize();

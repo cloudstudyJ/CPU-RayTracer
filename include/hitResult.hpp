@@ -15,5 +15,5 @@ struct HitResult {
     Vec3 hitPoint;
     Vec3 normal;
 
-    Material* material{};
+    const Material* material{};
 };

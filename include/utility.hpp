@@ -1,17 +1,19 @@
 #pragma once
 
-class Utility {
-    public:
-        template <typename T>
-        static T min(const T& a, const T& b) noexcept { return ((a < b) ? a : b); }
-        template <typename T>
-        static T max(const T& a, const T& b) noexcept { return ((a > b) ? a : b); }
+namespace Utility {
+    template <typename T>
+    inline constexpr T min(const T& a, const T& b) noexcept { return ((a < b) ? a : b); }
+    template <typename T>
+    inline constexpr T max(const T& a, const T& b) noexcept { return ((a > b) ? a : b); }
 
-        template <typename T>
-        static void swap(T& a, T& b) noexcept {
-            T temp = a;
+    template <typename T>
+    inline constexpr void swap(T& a, T& b) noexcept {
+        T temp = a;
 
-            a = b;
-            b = temp;
-        }
-};
+        a = b;
+        b = temp;
+    }
+
+    template <typename T>
+    inline constexpr bool isInRange(const T& val, const T& min, const T& max) noexcept { return (val >= min && val <= max); }
+}

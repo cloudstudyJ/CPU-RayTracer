@@ -10,6 +10,7 @@
 #include "utility.hpp"
 #include "random.hpp"
 #include "materials/materials.hpp"
+#include "bvhNode.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -18,15 +19,15 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
-#include <mutex>
+#include <algorithm>
 
-constexpr uint16 IMG_W = 1200;
-constexpr uint16 IMG_H = 675;
+constexpr uint32 IMG_W = 1200;
+constexpr uint32 IMG_H = 675;
 constexpr float32 ASPECT_RATIO = static_cast<float32>(IMG_W) / IMG_H;
 
-constexpr uint16  SAMPLES_PER_PIXEL = 500;
+constexpr uint32  SAMPLES_PER_PIXEL = 500;
 constexpr float32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
-constexpr uint16 MAX_RAY_BOUNCES = 50;
+constexpr uint32 MAX_RAY_BOUNCES = 50;
 
 constexpr Vec3 worldY = {0.0f, 1.0f, 0.0f};
 
@@ -36,6 +37,72 @@ std::vector<Vec3>  framebuffer(IMG_W * IMG_H);
 std::vector<uint8> snapshot(IMG_W * IMG_H * 3);
 
 std::vector<std::unique_ptr<Object>> objects;
+std::vector<std::unique_ptr<BVHNode>> bvh;
+
+Vec3 gammaCorrection(const Vec3& linearColor) {
+    return {
+        ((linearColor.x > 0.0f) ? Math::sqrt(linearColor.x) : 0.0f),
+        ((linearColor.y > 0.0f) ? Math::sqrt(linearColor.y) : 0.0f),
+        ((linearColor.z > 0.0f) ? Math::sqrt(linearColor.z) : 0.0f)
+    };
+}
+
+uint32 longestAxis(const AABB& aabb) {
+    const float32 xLength = aabb.max.x - aabb.min.x;
+    const float32 yLength = aabb.max.y - aabb.min.y;
+    const float32 zLength = aabb.max.z - aabb.min.z;
+
+    if (xLength > yLength) return ((xLength > zLength) ? 0 : 2);
+    else                   return ((yLength > zLength) ? 1 : 2);
+}
+// [from, to)
+AABB buildAABB(const std::vector<Object*>& objRefs, const uint32 from, const uint32 to) {
+    AABB result;
+
+    for (uint32 i = from; i < to; ++i)
+        result = AABB::unite(result, objRefs[i]->aabb());
+
+    return result;
+}
+// [from, to)
+BVHNode* buildBVH(std::vector<Object*>& objRefs, const uint32 from, const uint32 to) {
+    bvh.emplace_back(std::make_unique<BVHNode>());
+
+    BVHNode* newNode = bvh.back().get();
+    newNode->aabb = buildAABB(objRefs, from, to);
+
+    const uint32 nodeCount = to - from;
+
+    if (nodeCount == 1) {
+        newNode->object = objRefs[from];
+        return newNode;
+    }
+
+    const uint32 axis = longestAxis(newNode->aabb);
+    const uint32 midIdx = from + (nodeCount >> 1);
+
+    std::sort(
+        objRefs.begin() + from, objRefs.begin() + to,
+        [axis](const Object* a, const Object* b) noexcept -> bool {
+            return (a->aabb().min.data[axis] < b->aabb().min.data[axis]);
+        }
+    );
+
+    newNode->left  = buildBVH(objRefs, from, midIdx);
+    newNode->right = buildBVH(objRefs, midIdx, to);
+
+    return newNode;
+}
+void buildBVH() {
+    std::vector<Object*> objRefs;
+    objRefs.reserve(objects.size());
+
+    for (const auto& obj: objects)
+        objRefs.push_back(obj.get());
+
+    buildBVH(objRefs, 0, static_cast<uint32>(objRefs.size()));
+}
+HitResult traceBVH(const Ray& ray, const float32 tMin, const float32 tMax) { return bvh[0]->hitTest(ray, tMin, tMax); }
 
 Vec3 missShader(const Ray& ray) {
     // move range from [-1, 1] to [0, 1]
@@ -50,26 +117,11 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
 
     SampleResult sample = hitResult.material->sample(ray, hitResult);
 
-    HitResult bounceHitResult;
-    for (const auto& object: objects) {
-        HitResult currentHitResult = object->hitTest(sample.wo, RAY_T_MIN, bounceHitResult.hitT);
-
-        if (currentHitResult.isHit)
-            bounceHitResult = currentHitResult;
-    }
-
+    HitResult bounceHitResult = traceBVH(sample.wo, RAY_T_MIN, INF_F32);
     if (bounceHitResult.isHit)
         return sample.albedo * hitShader(sample.wo, bounceHitResult, depth + 1);
 
     return missShader(sample.wo) * sample.albedo;
-}
-
-Vec3 gammaCorrection(const Vec3& linearColor) {
-    return {
-        ((linearColor.x > 0.0f) ? Math::sqrt(linearColor.x) : 0.0f),
-        ((linearColor.y > 0.0f) ? Math::sqrt(linearColor.y) : 0.0f),
-        ((linearColor.z > 0.0f) ? Math::sqrt(linearColor.z) : 0.0f)
-    };
 }
 
 int main() {
@@ -129,6 +181,7 @@ int main() {
             }
         }
     }
+    buildBVH();
 
     std::vector<std::thread> threads;
     threads.reserve(THREADS);
@@ -137,12 +190,11 @@ int main() {
     start = std::chrono::steady_clock::now();
     {
         std::atomic<uint32> nextChunk{};
-        std::mutex writeMutex;
 
         auto render = [&]() {
             while (true) {
                 uint32 yFrom = nextChunk.fetch_add(1, std::memory_order_relaxed);
-                uint32 yTo   = Utility::min(static_cast<uint16>(yFrom + 1), IMG_H);
+                uint32 yTo   = Utility::min(yFrom + 1, IMG_H);
 
                 if (yFrom >= IMG_H)
                     break;
@@ -157,14 +209,7 @@ int main() {
                             Ray  ray       = {camera.pos, samplePos - camera.pos};
 
                             // primary ray
-                            HitResult hitResult;
-                            for (const auto& object: objects) {
-                                HitResult currentHitResult = object->hitTest(ray, RAY_T_MIN, hitResult.hitT);
-
-                                if (currentHitResult.isHit)
-                                    hitResult = currentHitResult;
-                            }
-
+                            HitResult hitResult = traceBVH(ray, RAY_T_MIN, INF_F32);
                             color += (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
                         }
                         color *= SAMPLE_SCALE;
@@ -179,20 +224,6 @@ int main() {
                         snapshot[idx * 3 + 2] = static_cast<uint8>(255.999f * color.b);
                     }
                 }
-
-                // progress write
-                {
-                    std::lock_guard<std::mutex> lock(writeMutex);
-                    std::ofstream writer("result.ppm", std::ios::binary);
-
-                    // write header
-                    writer << "P6\n";
-                    writer << IMG_W << ' ' << IMG_H << '\n';
-                    writer << 255 << '\n';
-
-                    // write image data
-                    writer.write(reinterpret_cast<const char*>(snapshot.data()), IMG_W * yTo * 3);
-                }
             }
         };
 
@@ -203,6 +234,13 @@ int main() {
             thread.join();
     }
     end = std::chrono::steady_clock::now();
+
+    std::ofstream writer("result.ppm", std::ios::binary);
+
+    writer << "P6\n";
+    writer << IMG_W << ' ' << IMG_H << '\n';
+    writer << "255\n";
+    writer.write(reinterpret_cast<const char*>(snapshot.data()), snapshot.size());
 
     std::cout << "Threads: " << THREADS << '\n';
     std::cout << "Resolution: " << IMG_W << 'x' << IMG_H << '\n';
