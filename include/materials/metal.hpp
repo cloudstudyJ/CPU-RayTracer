@@ -1,16 +1,24 @@
 #pragma once
 
 #include "materials/material.hpp"
+#include "solidTexture.hpp"
 
-struct Metal: public Material {
+#include <memory>
+
+// fwd
+class Texture;
+
+class Metal: public Material {
     public:
-        Metal() noexcept: roughness(0.1f) {}
-        Metal(const Vec3& albedo, const float32 roughness) noexcept: albedo(albedo), roughness(roughness) {}
+        Metal() noexcept: mRoughness(0.1f), mTexture(std::make_shared<SolidTexture>(Vec3{0.5f, 0.5f, 0.5f})) {}
+        Metal(const float32 roughness, std::shared_ptr<Texture> texture) noexcept: mRoughness(roughness), mTexture(texture)  {}
 
         SampleResult sample(const Ray& wi, const HitResult& surfaceInfo) const override;
 
-    public:
-        float32 roughness;
+        float32 roughness() const noexcept { return mRoughness; }
 
-        Vec3 albedo;
+    private:
+        float32 mRoughness;
+
+        std::shared_ptr<Texture> mTexture;
 };

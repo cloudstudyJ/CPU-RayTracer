@@ -11,6 +11,8 @@ struct HitResult {
     bool wasRayInside{};
 
     float32 hitT{INF_F32};
+    float32 u{};
+    float32 v{};
 
     Vec3 hitPoint;
     Vec3 normal;

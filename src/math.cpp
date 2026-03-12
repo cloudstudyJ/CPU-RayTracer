@@ -2,7 +2,11 @@
 
 #include <cmath>
 
-float32 Math::pow(const float32 x, const float32 y) noexcept { return std::pow(x, y); }
-float32 Math::sqrt(const float32 val) noexcept { return std::sqrt(val); }
+namespace Math {
+    float32 pow(const float32 x, const float32 y) noexcept { return std::pow(x, y); }
+    float32 sqrt(const float32 val) noexcept { return std::sqrt(val); }
 
-float32 Math::tan(const float32 degree) noexcept { return std::tan(toRad(degree)); }
+    float32 tan(const float32 degree) noexcept { return std::tan(toRad(degree)); }
+    float32 arccos(const float32 val) noexcept { return std::acos(val);}
+    float32 arctan2(const float32 y, const float32 x) noexcept { return std::atan2(y, x);}
+}

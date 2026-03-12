@@ -3,7 +3,7 @@
 #include "sampleResult.hpp"
 #include "hitResult.hpp"
 
-struct Material {
+class Material {
     public:
         virtual ~Material() noexcept = default;
 

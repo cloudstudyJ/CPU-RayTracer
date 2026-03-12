@@ -1,14 +1,21 @@
 #pragma once
 
 #include "materials/material.hpp"
+#include "solidTexture.hpp"
 
-struct Lambertian: public Material {
+#include <memory>
+
+// fwd
+class Texture;
+class SolidTexture;
+
+class Lambertian: public Material {
     public:
-        Lambertian() noexcept = default;
-        Lambertian(const Vec3& albedo) noexcept: albedo(albedo) {}
+        Lambertian() noexcept: mTexture(std::make_shared<SolidTexture>(Vec3{0.5f, 0.5f, 0.5f})) {}
+        Lambertian(std::shared_ptr<Texture> texture) noexcept: mTexture(texture) {}
 
         SampleResult sample(const Ray& wi, const HitResult& surfaceInfo) const override;
 
-    public:
-        Vec3 albedo;
+    private:
+        std::shared_ptr<Texture> mTexture;
 };

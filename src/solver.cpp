@@ -2,6 +2,7 @@
 #include "utility.hpp"
 #include "sphere.hpp"
 #include "aabb.hpp"
+#include "math.hpp"
 
 HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const float32 tMin, const float32 tMax) {
     Vec3 spherePos = sphere.pos();
@@ -29,10 +30,16 @@ HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const float32 tM
     Vec3 outN = (hitP - spherePos) / radius;
     bool wasRayInside = (Vec3::dot(ray.direction, outN) > EPS_F32);
 
+    float32 phi = Math::arctan2(-outN.z, outN.x);
+    if (phi < 0.0f)
+        phi += (2 * Math::PI);
+
     HitResult hitResult {
         .isHit        = true,
         .wasRayInside = wasRayInside,
         .hitT         = t,
+        .u            = phi / (2 * Math::PI),
+        .v            = Math::arccos(-outN.y) / Math::PI,
         .hitPoint     = hitP,
         .normal       = (wasRayInside ? -outN : outN),
         .material     = sphere.material()

@@ -1,4 +1,5 @@
 #include "materials/lambertian.hpp"
+#include "texture.hpp"
 
 #include "random.hpp"
 
@@ -10,7 +11,7 @@ SampleResult Lambertian::sample(const Ray& wi, const HitResult& surfaceInfo) con
         sampleDir = surfaceInfo.normal;
 
     sampleResult.wo     = {surfaceInfo.hitPoint, sampleDir};
-    sampleResult.albedo = albedo;
+    sampleResult.albedo = mTexture->color(surfaceInfo.u, surfaceInfo.v);
 
     return sampleResult;
 }

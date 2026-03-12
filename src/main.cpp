@@ -11,6 +11,9 @@
 #include "random.hpp"
 #include "materials/materials.hpp"
 #include "bvhNode.hpp"
+#include "image.hpp"
+#include "texture.hpp"
+#include "imageTexture.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -38,6 +41,8 @@ std::vector<uint8> snapshot(IMG_W * IMG_H * 3);
 
 std::vector<std::unique_ptr<Object>> objects;
 std::vector<std::unique_ptr<BVHNode>> bvh;
+std::vector<std::shared_ptr<Image>> images;
+std::vector<std::shared_ptr<Texture>> textures;
 
 Vec3 gammaCorrection(const Vec3& linearColor) {
     return {
@@ -127,7 +132,7 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
 int main() {
     Camera camera;
     camera.yfov = 20.0f;
-    camera.pos  = {13.0f, 2.0f, 3.0f};
+    camera.pos  = {0.0f, 1.0f, 3.0f};
 
     Vec3 nz = camera.pos - camera.look;
     float32 focalLength = nz.length();
@@ -147,40 +152,27 @@ int main() {
     Vec3 viewportdV = viewportV / IMG_H;
     Vec3 viewportLT = camera.pos - (viewportU / 2.0f) - (viewportV / 2.0f) - nz;
 
-    auto material_ground = std::make_shared<Lambertian>(Vec3{0.5f, 0.5f, 0.5f});
-    auto material_glass  = std::make_shared<Dielectric>(1.5f);
-    auto material_1      = std::make_shared<Lambertian>(Vec3{0.4f, 0.2f, 0.1f});
-    auto material_2      = std::make_shared<Metal>(Vec3{0.7f, 0.6f, 0.5f}, 0.0f);
+    // load textures
+    const char* imgFiles[] = {
+        "../../resources/textures/earth.jpg"
+    };
 
-    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, -1000.0f, 0.0f}, 1000.0f, material_ground));
-    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 1.0f, 0.0f}, 1.0f, material_glass));
-    objects.push_back(std::make_unique<Sphere>(Vec3{-4.0f, 1.0f, 0.0f}, 1.0f, material_1));
-    objects.push_back(std::make_unique<Sphere>(Vec3{4.0f, 1.0f, 0.0f}, 1.0f, material_2));
+    for (const auto& file: imgFiles) {
+        auto image = std::make_shared<Image>();
 
-    for (int i = -11; i < 11; ++i) {
-        for (int j = -11; j < 11; ++j) {
-            float32 matSelector = Random::uniform();
-            Vec3 objPos = {i + 0.9f * Random::uniform(), 0.2f, j + 0.9f * Random::uniform()};
-
-            if ((objPos - Vec3{4.0f, -0.2f, 0.0f}).length() > 0.9f) {
-                std::shared_ptr<Material> objMaterial;
-
-                // diffuse
-                if (matSelector < 0.8f)
-                    objMaterial = std::make_shared<Lambertian>(Random::uniformVec3() * Random::uniformVec3());
-
-                // metal
-                else if (matSelector < 0.95f)
-                    objMaterial = std::make_shared<Metal>(Random::uniformVec3(0.5f, 1.0f), Random::uniform(0.0f, 0.5f));
-
-                // glass
-                else
-                    objMaterial = material_glass;
-
-                objects.push_back(std::make_unique<Sphere>(objPos, 0.2f, objMaterial));
-            }
+        if (!image->load(file)) {
+            std::cout << "Failed to load image: " << file << '\n';
+            return 0;
         }
+
+        images.emplace_back(image);
     }
+
+    textures.push_back(std::make_shared<ImageTexture>(images[0]));
+
+    auto earth_material = std::make_shared<Lambertian>(textures[0]);
+    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 0.0f, 0.0f}, 0.5f, earth_material));
+
     buildBVH();
 
     std::vector<std::thread> threads;
