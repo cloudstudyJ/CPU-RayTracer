@@ -1,19 +1,16 @@
-#include "types.hpp"
-#include "vec3.hpp"
 #include "ray.hpp"
 #include "camera.hpp"
 #include "viewport.hpp"
 #include "math.hpp"
 #include "sphere.hpp"
 #include "hitResult.hpp"
-#include "constants.hpp"
 #include "utility.hpp"
 #include "random.hpp"
 #include "materials/materials.hpp"
-#include "bvhNode.hpp"
 #include "image.hpp"
 #include "texture.hpp"
 #include "imageTexture.hpp"
+#include "world.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -22,7 +19,6 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
-#include <algorithm>
 
 constexpr uint32 IMG_W = 1200;
 constexpr uint32 IMG_H = 675;
@@ -39,10 +35,10 @@ const uint32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
 std::vector<Vec3>  framebuffer(IMG_W * IMG_H);
 std::vector<uint8> snapshot(IMG_W * IMG_H * 3);
 
-std::vector<std::unique_ptr<Object>> objects;
-std::vector<std::unique_ptr<BVHNode>> bvh;
 std::vector<std::shared_ptr<Image>> images;
 std::vector<std::shared_ptr<Texture>> textures;
+
+World world;
 
 Vec3 gammaCorrection(const Vec3& linearColor) {
     return {
@@ -51,63 +47,6 @@ Vec3 gammaCorrection(const Vec3& linearColor) {
         ((linearColor.z > 0.0f) ? Math::sqrt(linearColor.z) : 0.0f)
     };
 }
-
-uint32 longestAxis(const AABB& aabb) {
-    const float32 xLength = aabb.max.x - aabb.min.x;
-    const float32 yLength = aabb.max.y - aabb.min.y;
-    const float32 zLength = aabb.max.z - aabb.min.z;
-
-    if (xLength > yLength) return ((xLength > zLength) ? 0 : 2);
-    else                   return ((yLength > zLength) ? 1 : 2);
-}
-// [from, to)
-AABB buildAABB(const std::vector<Object*>& objRefs, const uint32 from, const uint32 to) {
-    AABB result;
-
-    for (uint32 i = from; i < to; ++i)
-        result = AABB::unite(result, objRefs[i]->aabb());
-
-    return result;
-}
-// [from, to)
-BVHNode* buildBVH(std::vector<Object*>& objRefs, const uint32 from, const uint32 to) {
-    bvh.emplace_back(std::make_unique<BVHNode>());
-
-    BVHNode* newNode = bvh.back().get();
-    newNode->aabb = buildAABB(objRefs, from, to);
-
-    const uint32 nodeCount = to - from;
-
-    if (nodeCount == 1) {
-        newNode->object = objRefs[from];
-        return newNode;
-    }
-
-    const uint32 axis = longestAxis(newNode->aabb);
-    const uint32 midIdx = from + (nodeCount >> 1);
-
-    std::sort(
-        objRefs.begin() + from, objRefs.begin() + to,
-        [axis](const Object* a, const Object* b) noexcept -> bool {
-            return (a->aabb().min.data[axis] < b->aabb().min.data[axis]);
-        }
-    );
-
-    newNode->left  = buildBVH(objRefs, from, midIdx);
-    newNode->right = buildBVH(objRefs, midIdx, to);
-
-    return newNode;
-}
-void buildBVH() {
-    std::vector<Object*> objRefs;
-    objRefs.reserve(objects.size());
-
-    for (const auto& obj: objects)
-        objRefs.push_back(obj.get());
-
-    buildBVH(objRefs, 0, static_cast<uint32>(objRefs.size()));
-}
-HitResult traceBVH(const Ray& ray, const float32 tMin, const float32 tMax) { return bvh[0]->hitTest(ray, tMin, tMax); }
 
 Vec3 missShader(const Ray& ray) {
     // move range from [-1, 1] to [0, 1]
@@ -122,7 +61,7 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
 
     SampleResult sample = hitResult.material->sample(ray, hitResult);
 
-    HitResult bounceHitResult = traceBVH(sample.wo, RAY_T_MIN, INF_F32);
+    HitResult bounceHitResult = world.traceRay(sample.wo, RAY_T_MIN, INF_F32);
     if (bounceHitResult.isHit)
         return sample.albedo * hitShader(sample.wo, bounceHitResult, depth + 1);
 
@@ -167,13 +106,11 @@ int main() {
 
         images.emplace_back(image);
     }
-
     textures.push_back(std::make_shared<ImageTexture>(images[0]));
-
     auto earth_material = std::make_shared<Lambertian>(textures[0]);
-    objects.push_back(std::make_unique<Sphere>(Vec3{0.0f, 0.0f, 0.0f}, 0.5f, earth_material));
 
-    buildBVH();
+    world.addObject<Sphere>(Vec3{0.0f, 0.0f, 0.0f}, 0.5f, earth_material);
+    world.buildAccelerationStructure();
 
     std::vector<std::thread> threads;
     threads.reserve(THREADS);
@@ -201,7 +138,7 @@ int main() {
                             Ray  ray       = {camera.pos, samplePos - camera.pos};
 
                             // primary ray
-                            HitResult hitResult = traceBVH(ray, RAY_T_MIN, INF_F32);
+                            HitResult hitResult = world.traceRay(ray, RAY_T_MIN, INF_F32);
                             color += (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
                         }
                         color *= SAMPLE_SCALE;
