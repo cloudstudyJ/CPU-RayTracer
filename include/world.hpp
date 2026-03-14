@@ -1,7 +1,7 @@
 #pragma once
 
 #include "accelerationStructure.hpp"
-#include "object.hpp"
+#include "objects/object.hpp"
 #include "ray.hpp"
 
 #include <vector>

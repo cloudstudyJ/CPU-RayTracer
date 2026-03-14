@@ -1,4 +1,4 @@
-#include "sphere.hpp"
+#include "objects/sphere.hpp"
 #include "solver.hpp"
 
 Sphere::Sphere() noexcept

@@ -8,7 +8,7 @@ struct Material;
 
 struct HitResult {
     bool isHit{};
-    bool wasRayInside{};
+    bool isRayOppositeNormal{};
 
     float32 hitT{INF_F32};
     float32 u{};

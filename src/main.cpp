@@ -2,14 +2,11 @@
 #include "camera.hpp"
 #include "viewport.hpp"
 #include "math.hpp"
-#include "sphere.hpp"
+#include "objects/quad.hpp"
 #include "hitResult.hpp"
 #include "utility.hpp"
 #include "random.hpp"
 #include "materials/materials.hpp"
-#include "image.hpp"
-#include "texture.hpp"
-#include "imageTexture.hpp"
 #include "world.hpp"
 
 #include <iostream>
@@ -20,11 +17,11 @@
 #include <thread>
 #include <atomic>
 
-constexpr uint32 IMG_W = 1200;
-constexpr uint32 IMG_H = 675;
+constexpr uint32 IMG_W = 400;
+constexpr uint32 IMG_H = 400;
 constexpr float32 ASPECT_RATIO = static_cast<float32>(IMG_W) / IMG_H;
 
-constexpr uint32  SAMPLES_PER_PIXEL = 500;
+constexpr uint32  SAMPLES_PER_PIXEL = 100;
 constexpr float32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
 constexpr uint32 MAX_RAY_BOUNCES = 50;
 
@@ -34,9 +31,6 @@ const uint32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
 
 std::vector<Vec3>  framebuffer(IMG_W * IMG_H);
 std::vector<uint8> snapshot(IMG_W * IMG_H * 3);
-
-std::vector<std::shared_ptr<Image>> images;
-std::vector<std::shared_ptr<Texture>> textures;
 
 World world;
 
@@ -70,8 +64,8 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
 
 int main() {
     Camera camera;
-    camera.yfov = 20.0f;
-    camera.pos  = {0.0f, 1.0f, 3.0f};
+    camera.yfov = 80.0f;
+    camera.pos  = {0.0f, 0.0f, 9.0f};
 
     Vec3 nz = camera.pos - camera.look;
     float32 focalLength = nz.length();
@@ -91,25 +85,17 @@ int main() {
     Vec3 viewportdV = viewportV / IMG_H;
     Vec3 viewportLT = camera.pos - (viewportU / 2.0f) - (viewportV / 2.0f) - nz;
 
-    // load textures
-    const char* imgFiles[] = {
-        "../../resources/textures/earth.jpg"
-    };
+    auto wall_L = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{1.0f, 0.2f, 0.2f}));
+    auto wall_R = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.2f, 0.2f, 1.0f}));
+    auto wall_U = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{1.0f, 0.5f, 0.0f}));
+    auto wall_D = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.2f, 0.8f, 0.8f}));
+    auto wall_B = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.2f, 1.0f, 0.2f}));
 
-    for (const auto& file: imgFiles) {
-        auto image = std::make_shared<Image>();
-
-        if (!image->load(file)) {
-            std::cout << "Failed to load image: " << file << '\n';
-            return 0;
-        }
-
-        images.emplace_back(image);
-    }
-    textures.push_back(std::make_shared<ImageTexture>(images[0]));
-    auto earth_material = std::make_shared<Lambertian>(textures[0]);
-
-    world.addObject<Sphere>(Vec3{0.0f, 0.0f, 0.0f}, 0.5f, earth_material);
+    world.addObject<Quad>(Vec3{-3.0f, -2.0f, 5.0f}, Vec3{0.0f, 0.0f, -4.0f}, Vec3{0.0f, 4.0f, 0.0f}, wall_L);
+    world.addObject<Quad>(Vec3{3.0f, -2.0f, 1.0f}, Vec3{0.0f, 0.0f, 4.0f}, Vec3{0.0f, 4.0f, 0.0f}, wall_R);
+    world.addObject<Quad>(Vec3{-2.0f, 3.0f, 1.0f}, Vec3{4.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 4.0f}, wall_U);
+    world.addObject<Quad>(Vec3{-2.0f, -3.0f, 5.0f}, Vec3{4.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, -4.0f}, wall_D);
+    world.addObject<Quad>(Vec3{-2.0f, -2.0f, 0.0f}, Vec3{4.0f, 0.0f, 0.0f}, Vec3{0.0f, 4.0f, 0.0f}, wall_B);
     world.buildAccelerationStructure();
 
     std::vector<std::thread> threads;
