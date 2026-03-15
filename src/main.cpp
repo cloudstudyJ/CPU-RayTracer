@@ -17,11 +17,11 @@
 #include <thread>
 #include <atomic>
 
-constexpr uint32 IMG_W = 400;
-constexpr uint32 IMG_H = 400;
+constexpr uint32 IMG_W = 600;
+constexpr uint32 IMG_H = 600;
 constexpr float32 ASPECT_RATIO = static_cast<float32>(IMG_W) / IMG_H;
 
-constexpr uint32  SAMPLES_PER_PIXEL = 100;
+constexpr uint32  SAMPLES_PER_PIXEL = 200;
 constexpr float32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
 constexpr uint32 MAX_RAY_BOUNCES = 50;
 
@@ -62,10 +62,23 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
     return missShader(sample.wo) * sample.albedo;
 }
 
+void makeCornellBox() {
+    auto green = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.12f, 0.45f, 0.15f}));
+    auto red   = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.65f, 0.05f, 0.05f}));
+    auto white = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.73f, 0.73f, 0.73f}));
+
+    world.addObject<Quad>(Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, green);
+    world.addObject<Quad>(Vec3{0.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, red);
+    world.addObject<Quad>(Vec3{0.0f, 0.0f, 0.0f}, Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, white);
+    world.addObject<Quad>(Vec3{555.0f, 555.0f, 555.0f}, Vec3{-555.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, -555.0f}, white);
+    world.addObject<Quad>(Vec3{0.0f, 0.0f, 555.0f}, Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, white);
+}
+
 int main() {
     Camera camera;
-    camera.yfov = 80.0f;
-    camera.pos  = {0.0f, 0.0f, 9.0f};
+    camera.yfov = 40.0f;
+    camera.pos  = {278.0f, 278.0f, -800.0f};
+    camera.look = {278.0f, 278.0f, 0.0f};
 
     Vec3 nz = camera.pos - camera.look;
     float32 focalLength = nz.length();
@@ -85,17 +98,7 @@ int main() {
     Vec3 viewportdV = viewportV / IMG_H;
     Vec3 viewportLT = camera.pos - (viewportU / 2.0f) - (viewportV / 2.0f) - nz;
 
-    auto wall_L = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{1.0f, 0.2f, 0.2f}));
-    auto wall_R = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.2f, 0.2f, 1.0f}));
-    auto wall_U = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{1.0f, 0.5f, 0.0f}));
-    auto wall_D = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.2f, 0.8f, 0.8f}));
-    auto wall_B = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.2f, 1.0f, 0.2f}));
-
-    world.addObject<Quad>(Vec3{-3.0f, -2.0f, 5.0f}, Vec3{0.0f, 0.0f, -4.0f}, Vec3{0.0f, 4.0f, 0.0f}, wall_L);
-    world.addObject<Quad>(Vec3{3.0f, -2.0f, 1.0f}, Vec3{0.0f, 0.0f, 4.0f}, Vec3{0.0f, 4.0f, 0.0f}, wall_R);
-    world.addObject<Quad>(Vec3{-2.0f, 3.0f, 1.0f}, Vec3{4.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 4.0f}, wall_U);
-    world.addObject<Quad>(Vec3{-2.0f, -3.0f, 5.0f}, Vec3{4.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, -4.0f}, wall_D);
-    world.addObject<Quad>(Vec3{-2.0f, -2.0f, 0.0f}, Vec3{4.0f, 0.0f, 0.0f}, Vec3{0.0f, 4.0f, 0.0f}, wall_B);
+    makeCornellBox();
     world.buildAccelerationStructure();
 
     std::vector<std::thread> threads;
