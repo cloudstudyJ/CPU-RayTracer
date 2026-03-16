@@ -3,6 +3,8 @@
 #include <cmath>
 
 namespace Math {
+    float32 abs(const float32 val) noexcept { return std::fabs(val); }
+
     float32 pow(const float32 x, const float32 y) noexcept { return std::pow(x, y); }
     float32 sqrt(const float32 val) noexcept { return std::sqrt(val); }
 

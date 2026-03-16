@@ -2,7 +2,7 @@
 #include "solver.hpp"
 
 Quad::Quad() noexcept: Object() {}
-Quad::Quad(const Vec3& pos, const Vec3& u, const Vec3& v, std::shared_ptr<Material> material) noexcept
+Quad::Quad(const Vec3& pos, const Vec3& u, const Vec3& v, const Material* material) noexcept
     : Object(pos, material), mU(u), mV(v) {
     mAABB = AABB::unite(
         {pos, pos + u + v},

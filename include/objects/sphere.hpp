@@ -5,7 +5,7 @@
 class Sphere: public Object {
     public:
         Sphere() noexcept;
-        Sphere(const Vec3& pos, const float32 r, std::shared_ptr<Material> material) noexcept;
+        Sphere(const Vec3& pos, const float32 r, const Material* material) noexcept;
 
         HitResult hitTest(const Ray& ray, const float32 tMin, const float32 tMax) const override;
 

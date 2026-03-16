@@ -1,5 +1,4 @@
-#include "materials/dielectric.hpp"
-#include "math.hpp"
+#include "bxdfs/dielectric.hpp"
 #include "random.hpp"
 
 float32 schlickApprox(const float32 cos, const float32 refractiveIndex) noexcept {
@@ -12,18 +11,16 @@ float32 schlickApprox(const float32 cos, const float32 refractiveIndex) noexcept
     return r0 + (1 - r0) * (x2 * x2 * x);
 }
 
-SampleResult Dielectric::sample(const Ray& wi, const HitResult& surfaceInfo) const {
-    SampleResult sampleResult;
-
-    Vec3 in = wi.direction.normalize();
+Vec3 Dielectric::sample(const Vec3& wi, const HitResult& surfaceInfo) const noexcept {
+    Vec3 in = wi.normalize();
     float32 inCos = Vec3::dot(-in, surfaceInfo.normal);
     float32 inSin = Math::sqrt(1 - inCos * inCos);
-    float32 eta   = (surfaceInfo.isRayOppositeNormal ? (1 / refractiveIndex) : refractiveIndex);
+    float32 eta   = (surfaceInfo.isRayOppositeNormal ? (1 / mRefractiveIndex) : mRefractiveIndex);
 
     Vec3 out;
 
     // reflection
-    if ((eta * inSin > 1.0f) || (schlickApprox(inCos, refractiveIndex) > Random::uniform()))
+    if ((eta * inSin > 1.0f) || (schlickApprox(inCos, mRefractiveIndex) > Random::uniform()))
         out = Vec3::reflect(in, surfaceInfo.normal);
 
     // refraction
@@ -35,8 +32,5 @@ SampleResult Dielectric::sample(const Ray& wi, const HitResult& surfaceInfo) con
         out = outPerp + outPara;
     }
 
-    sampleResult.albedo = {1.0f, 1.0f, 1.0f};
-    sampleResult.wo     = {surfaceInfo.hitPoint, out};
-
-    return sampleResult;
+    return out;
 }

@@ -2,10 +2,8 @@
 
 #include "hitResult.hpp"
 #include "aabb.hpp"
-#include "materials/material.hpp"
+#include "material.hpp"
 #include "ray.hpp"
-
-#include <memory>
 
 class Object {
     public:
@@ -15,19 +13,18 @@ class Object {
 
         Vec3 pos() const noexcept { return mPos; }
 
-        Material* material() noexcept { return mMaterial.get(); }
-        const Material* material() const noexcept { return mMaterial.get(); }
-
         AABB& aabb() noexcept { return mAABB; }
         const AABB& aabb() const noexcept { return mAABB; }
 
+        const Material* material() const noexcept { return mMaterial; }
+
     protected:
         Object() noexcept = default;
-        Object(const Vec3& pos, std::shared_ptr<Material> material) noexcept: mPos(pos), mMaterial(material) {}
+        Object(const Vec3& pos, const Material* material) noexcept: mPos(pos), mMaterial(material) {}
 
     protected:
         Vec3 mPos;
 
         AABB mAABB;
-        std::shared_ptr<Material> mMaterial;
+        const Material* mMaterial;
 };

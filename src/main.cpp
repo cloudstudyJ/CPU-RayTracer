@@ -3,10 +3,15 @@
 #include "viewport.hpp"
 #include "math.hpp"
 #include "objects/quad.hpp"
+#include "objects/sphere.hpp"
 #include "hitResult.hpp"
 #include "utility.hpp"
 #include "random.hpp"
-#include "materials/materials.hpp"
+#include "material.hpp"
+#include "bxdfs/lambertian.hpp"
+#include "bxdfs/metal.hpp"
+#include "bxdfs/dielectric.hpp"
+#include "solidTexture.hpp"
 #include "world.hpp"
 
 #include <iostream>
@@ -32,6 +37,10 @@ const uint32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
 std::vector<Vec3>  framebuffer(IMG_W * IMG_H);
 std::vector<uint8> snapshot(IMG_W * IMG_H * 3);
 
+std::vector<std::shared_ptr<BxDF>>     bxdfs;
+std::vector<std::shared_ptr<Texture>>  textures;
+std::vector<std::shared_ptr<Material>> materials;
+
 World world;
 
 Vec3 gammaCorrection(const Vec3& linearColor) {
@@ -42,36 +51,53 @@ Vec3 gammaCorrection(const Vec3& linearColor) {
     };
 }
 
-Vec3 missShader(const Ray& ray) {
-    // move range from [-1, 1] to [0, 1]
-    float32 t = 0.5f * (ray.direction.normalize().y + 1.0f);
-
-    // White & SkyBlue
-    return Vec3::lerp({1.0f, 1.0f, 1.0f}, {0.5f, 0.7f, 1.0f}, t);
-}
+// Black Backround
+Vec3 missShader(const Ray& ray) { return {0.0f, 0.0f, 0.0f}; }
 Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
     if (depth > MAX_RAY_BOUNCES)
         return {};
 
-    SampleResult sample = hitResult.material->sample(ray, hitResult);
+    // if object is light
+    if (!hitResult.material->bxdf)
+        return (hitResult.material->emitColor * hitResult.material->emitIntensity);
 
-    HitResult bounceHitResult = world.traceRay(sample.wo, RAY_T_MIN, INF_F32);
+    Vec3 wo = hitResult.material->bxdf->sample(ray.direction, hitResult);
+
+    HitResult bounceHitResult = world.traceRay(Ray{hitResult.hitPoint, wo}, RAY_T_MIN, INF_F32);
     if (bounceHitResult.isHit)
-        return sample.albedo * hitShader(sample.wo, bounceHitResult, depth + 1);
+        return hitResult.material->color->color(hitResult.u, hitResult.v) * hitShader(Ray{hitResult.hitPoint, wo}, bounceHitResult, depth + 1);
 
-    return missShader(sample.wo) * sample.albedo;
+    return missShader(Ray{hitResult.hitPoint, wo}) * hitResult.material->color->color(hitResult.u, hitResult.v);
 }
 
 void makeCornellBox() {
-    auto green = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.12f, 0.45f, 0.15f}));
-    auto red   = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.65f, 0.05f, 0.05f}));
-    auto white = std::make_shared<Lambertian>(std::make_shared<SolidTexture>(Vec3{0.73f, 0.73f, 0.73f}));
+    bxdfs.push_back(std::make_shared<Lambertian>());
+    bxdfs.push_back(std::make_shared<Metal>(0.2f));
+    bxdfs.push_back(std::make_shared<Dielectric>());
+    bxdfs.push_back(std::make_shared<Dielectric>(1 / 1.5f));
 
-    world.addObject<Quad>(Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, green);
-    world.addObject<Quad>(Vec3{0.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, red);
-    world.addObject<Quad>(Vec3{0.0f, 0.0f, 0.0f}, Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, white);
-    world.addObject<Quad>(Vec3{555.0f, 555.0f, 555.0f}, Vec3{-555.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, -555.0f}, white);
-    world.addObject<Quad>(Vec3{0.0f, 0.0f, 555.0f}, Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, white);
+    textures.push_back(std::make_shared<SolidTexture>(Vec3{0.12f, 0.45f, 0.15f}));  // green
+    textures.push_back(std::make_shared<SolidTexture>(Vec3{0.65f, 0.05f, 0.05f}));  // red
+    textures.push_back(std::make_shared<SolidTexture>(Vec3{0.73f, 0.73f, 0.73f}));  // white
+    textures.push_back(std::make_shared<SolidTexture>(Vec3{1.0f, 1.0f, 1.0f}));     // pure white
+
+    materials.push_back(std::make_shared<Material>(Material{bxdfs[0].get(), textures[0].get()}));                           // green wall (Lambertian)
+    materials.push_back(std::make_shared<Material>(Material{bxdfs[1].get(), textures[1].get()}));                           // red   wall (Lambertian)
+    materials.push_back(std::make_shared<Material>(Material{bxdfs[0].get(), textures[2].get()}));                           // white wall (Lambertian)
+    materials.push_back(std::make_shared<Material>(Material{nullptr, textures[3].get(), Vec3{1.0f, 1.0f, 1.0f}, 15.0f}));   // light
+    materials.push_back(std::make_shared<Material>(Material{bxdfs[2].get(), textures[3].get()}));                           // sphere
+    materials.push_back(std::make_shared<Material>(Material{bxdfs[3].get(), textures[3].get()}));                           // sphere bubble
+
+    world.addObject<Quad>(Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, materials[0].get());
+    world.addObject<Quad>(Vec3{0.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, materials[1].get());
+    world.addObject<Quad>(Vec3{0.0f, 0.0f, 0.0f}, Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, materials[2].get());
+    world.addObject<Quad>(Vec3{555.0f, 555.0f, 555.0f}, Vec3{-555.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, -555.0f}, materials[2].get());
+    world.addObject<Quad>(Vec3{0.0f, 0.0f, 555.0f}, Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, materials[2].get());
+    world.addObject<Quad>(Vec3{343.0f, 554.0f, 332.0f}, Vec3{-130.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, -105.0f}, materials[3].get());
+    world.addObject<Sphere>(Vec3{207.5f, 287.5f, 307.5f}, 160.0f, materials[4].get());
+    world.addObject<Sphere>(Vec3{207.5f, 287.5f, 307.5f}, 150.0f, materials[5].get());
+    world.addObject<Sphere>(Vec3{407.5f, 107.5f, 147.5f}, 80.0f, materials[4].get());
+    world.addObject<Sphere>(Vec3{407.5f, 107.5f, 147.5f}, 70.0f, materials[5].get());
 }
 
 int main() {
@@ -136,6 +162,9 @@ int main() {
 
                         framebuffer[idx] = color;
                         color = gammaCorrection(color);
+                        color.r = Utility::clamp(color.x, 0.0f, 1.0f);
+                        color.g = Utility::clamp(color.y, 0.0f, 1.0f);
+                        color.b = Utility::clamp(color.z, 0.0f, 1.0f);
 
                         snapshot[idx * 3    ] = static_cast<uint8>(255.999f * color.r);
                         snapshot[idx * 3 + 1] = static_cast<uint8>(255.999f * color.g);

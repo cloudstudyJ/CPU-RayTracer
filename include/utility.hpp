@@ -5,6 +5,8 @@ namespace Utility {
     inline constexpr T min(const T& a, const T& b) noexcept { return ((a < b) ? a : b); }
     template <typename T>
     inline constexpr T max(const T& a, const T& b) noexcept { return ((a > b) ? a : b); }
+    template <typename T>
+    inline constexpr T clamp(const T& val, const T& low, const T& high) noexcept { return min(max(val, low), high); }
 
     template <typename T>
     inline constexpr void swap(T& a, T& b) noexcept {

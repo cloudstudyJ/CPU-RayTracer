@@ -16,7 +16,7 @@ class Image {
         uint32 height() const noexcept { return mHeight; }
 
     private:
-        uint8  mChannels;
+        uint8 mChannels;
 
         uint32 mWidth;
         uint32 mHeight;

@@ -55,7 +55,7 @@ HitResult Solver::hitTest(const Ray& ray, const Quad& quad, const float32 tMin, 
     Vec3 n   = Vec3::cross(u, v);
 
     float32 denom = Vec3::dot(n, ray.direction);
-    if (denom > -EPS_F32 && denom < EPS_F32)
+    if (Math::abs(denom) < EPS_F32)
         return {};
 
     float32 t = Vec3::dot(n, pos - ray.origin) / denom;

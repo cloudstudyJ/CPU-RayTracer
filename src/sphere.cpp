@@ -8,7 +8,7 @@ Sphere::Sphere() noexcept
         mPos + mRadius
     };
 }
-Sphere::Sphere(const Vec3& pos, const float32 r, std::shared_ptr<Material> material) noexcept
+Sphere::Sphere(const Vec3& pos, const float32 r, const Material* material) noexcept
     : Object(pos, material), mRadius(r) {
     mAABB = {
         mPos - mRadius,
