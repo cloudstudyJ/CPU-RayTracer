@@ -8,7 +8,7 @@ class Texture;
 
 struct Material {
     const BxDF*    bxdf{};
-    const Texture* color{};
+    const Texture* texture{};
 
     Vec3 emitColor;
     float32 emitIntensity{};

@@ -2,16 +2,13 @@
 #include "camera.hpp"
 #include "viewport.hpp"
 #include "math.hpp"
-#include "objects/quad.hpp"
-#include "objects/sphere.hpp"
 #include "hitResult.hpp"
 #include "utility.hpp"
 #include "random.hpp"
 #include "material.hpp"
 #include "bxdfs/lambertian.hpp"
-#include "bxdfs/metal.hpp"
-#include "bxdfs/dielectric.hpp"
 #include "solidTexture.hpp"
+#include "objects/objects.hpp"
 #include "world.hpp"
 
 #include <iostream>
@@ -30,7 +27,9 @@ constexpr uint32  SAMPLES_PER_PIXEL = 200;
 constexpr float32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
 constexpr uint32 MAX_RAY_BOUNCES = 50;
 
-constexpr Vec3 worldY = {0.0f, 1.0f, 0.0f};
+constexpr Vec3 WORLD_Y     = {0.0f, 1.0f, 0.0f};
+constexpr Vec3 COLOR_BLACK = {0.0f, 0.0f, 0.0f};
+constexpr Vec3 COLOR_WHITE = {1.0f, 1.0f, 1.0f};
 
 const uint32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
 
@@ -52,7 +51,7 @@ Vec3 gammaCorrection(const Vec3& linearColor) {
 }
 
 // Black Backround
-Vec3 missShader(const Ray& ray) { return {0.0f, 0.0f, 0.0f}; }
+Vec3 missShader(const Ray& ray) { return COLOR_BLACK; }
 Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
     if (depth > MAX_RAY_BOUNCES)
         return {};
@@ -65,16 +64,13 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
 
     HitResult bounceHitResult = world.traceRay(Ray{hitResult.hitPoint, wo}, RAY_T_MIN, INF_F32);
     if (bounceHitResult.isHit)
-        return hitResult.material->color->color(hitResult.u, hitResult.v) * hitShader(Ray{hitResult.hitPoint, wo}, bounceHitResult, depth + 1);
+        return hitResult.material->texture->color(hitResult.u, hitResult.v) * hitShader(Ray{hitResult.hitPoint, wo}, bounceHitResult, depth + 1);
 
-    return missShader(Ray{hitResult.hitPoint, wo}) * hitResult.material->color->color(hitResult.u, hitResult.v);
+    return missShader(Ray{hitResult.hitPoint, wo}) * hitResult.material->texture->color(hitResult.u, hitResult.v);
 }
 
 void makeCornellBox() {
     bxdfs.push_back(std::make_shared<Lambertian>());
-    bxdfs.push_back(std::make_shared<Metal>(0.2f));
-    bxdfs.push_back(std::make_shared<Dielectric>());
-    bxdfs.push_back(std::make_shared<Dielectric>(1 / 1.5f));
 
     textures.push_back(std::make_shared<SolidTexture>(Vec3{0.12f, 0.45f, 0.15f}));  // green
     textures.push_back(std::make_shared<SolidTexture>(Vec3{0.65f, 0.05f, 0.05f}));  // red
@@ -82,11 +78,9 @@ void makeCornellBox() {
     textures.push_back(std::make_shared<SolidTexture>(Vec3{1.0f, 1.0f, 1.0f}));     // pure white
 
     materials.push_back(std::make_shared<Material>(Material{bxdfs[0].get(), textures[0].get()}));                           // green wall (Lambertian)
-    materials.push_back(std::make_shared<Material>(Material{bxdfs[1].get(), textures[1].get()}));                           // red   wall (Lambertian)
+    materials.push_back(std::make_shared<Material>(Material{bxdfs[0].get(), textures[1].get()}));                           // red   wall (Lambertian)
     materials.push_back(std::make_shared<Material>(Material{bxdfs[0].get(), textures[2].get()}));                           // white wall (Lambertian)
-    materials.push_back(std::make_shared<Material>(Material{nullptr, textures[3].get(), Vec3{1.0f, 1.0f, 1.0f}, 15.0f}));   // light
-    materials.push_back(std::make_shared<Material>(Material{bxdfs[2].get(), textures[3].get()}));                           // sphere
-    materials.push_back(std::make_shared<Material>(Material{bxdfs[3].get(), textures[3].get()}));                           // sphere bubble
+    materials.push_back(std::make_shared<Material>(Material{nullptr, textures[3].get(), COLOR_WHITE, 15.0f}));   // light
 
     world.addObject<Quad>(Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, materials[0].get());
     world.addObject<Quad>(Vec3{0.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, materials[1].get());
@@ -94,10 +88,6 @@ void makeCornellBox() {
     world.addObject<Quad>(Vec3{555.0f, 555.0f, 555.0f}, Vec3{-555.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, -555.0f}, materials[2].get());
     world.addObject<Quad>(Vec3{0.0f, 0.0f, 555.0f}, Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, materials[2].get());
     world.addObject<Quad>(Vec3{343.0f, 554.0f, 332.0f}, Vec3{-130.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, -105.0f}, materials[3].get());
-    world.addObject<Sphere>(Vec3{207.5f, 287.5f, 307.5f}, 160.0f, materials[4].get());
-    world.addObject<Sphere>(Vec3{207.5f, 287.5f, 307.5f}, 150.0f, materials[5].get());
-    world.addObject<Sphere>(Vec3{407.5f, 107.5f, 147.5f}, 80.0f, materials[4].get());
-    world.addObject<Sphere>(Vec3{407.5f, 107.5f, 147.5f}, 70.0f, materials[5].get());
 }
 
 int main() {
@@ -114,7 +104,7 @@ int main() {
     viewport.width  = viewport.height * ASPECT_RATIO;
 
     Vec3 z = nz.normalize();
-    Vec3 x = Vec3::cross(worldY, z).normalize();
+    Vec3 x = Vec3::cross(WORLD_Y, z).normalize();
     Vec3 y = Vec3::cross(z, x);
 
     Vec3 viewportU = x * viewport.width;
@@ -125,6 +115,8 @@ int main() {
     Vec3 viewportLT = camera.pos - (viewportU / 2.0f) - (viewportV / 2.0f) - nz;
 
     makeCornellBox();
+    world.addObject<Box>(Vec3{130.0f, 0.0f, 65.0f}, Vec3{295.0f, 165.0f, 230.0f}, materials[2].get());
+    world.addObject<Box>(Vec3{265.0f, 0.0f, 295.0f}, Vec3{430.0f, 330.0f, 460.0f}, materials[2].get());
     world.buildAccelerationStructure();
 
     std::vector<std::thread> threads;
