@@ -13,7 +13,10 @@ namespace Math {
     float32 pow(const float32 x, const float32 y) noexcept;
     float32 sqrt(const float32 val) noexcept;
 
-    float32 tan(const float32 degree) noexcept;
+    float32 sin(const float32 rad) noexcept;
+    float32 cos(const float32 rad) noexcept;
+    float32 tan(const float32 rad) noexcept;
+
     float32 arccos(const float32 val) noexcept;
     float32 arctan2(const float32 y, const float32 x) noexcept;
 }

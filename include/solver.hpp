@@ -1,9 +1,9 @@
 #pragma once
 
 #include "hitResult.hpp"
-#include "ray.hpp"
 
 // fwd
+struct Ray;
 struct AABB;
 
 // fwd

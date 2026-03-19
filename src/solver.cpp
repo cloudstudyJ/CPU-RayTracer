@@ -4,6 +4,7 @@
 #include "objects/quad.hpp"
 #include "aabb.hpp"
 #include "math.hpp"
+#include "ray.hpp"
 
 HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const float32 tMin, const float32 tMax) {
     Vec3 spherePos = sphere.pos();

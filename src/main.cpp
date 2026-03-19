@@ -6,9 +6,9 @@
 #include "utility.hpp"
 #include "random.hpp"
 #include "material.hpp"
-#include "bxdfs/lambertian.hpp"
 #include "solidTexture.hpp"
-#include "objects/objects.hpp"
+#include "objects.hpp"
+#include "bxdfs.hpp"
 #include "world.hpp"
 
 #include <iostream>
@@ -100,7 +100,7 @@ int main() {
     float32 focalLength = nz.length();
 
     Viewport viewport;
-    viewport.height = 2 * focalLength * Math::tan(camera.yfov / 2);
+    viewport.height = 2 * focalLength * Math::tan(Math::toRad(camera.yfov / 2));
     viewport.width  = viewport.height * ASPECT_RATIO;
 
     Vec3 z = nz.normalize();

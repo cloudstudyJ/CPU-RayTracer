@@ -3,12 +3,8 @@
 #include "vec3.hpp"
 
 struct Camera {
-    public:
-        Camera() noexcept: yfov(90.0f) {}
+    float32 yfov;
 
-    public:
-        float32 yfov;
-
-        Vec3 pos;
-        Vec3 look;
+    Vec3 pos;
+    Vec3 look;
 };

@@ -11,8 +11,8 @@ namespace Random {
     // [0.0f, 1.0f)
     inline Vec3 uniformVec3() { return {uniform(), uniform(), uniform()}; }
     // [from, to)
-    Vec3 uniformVec3(const float32 from, const float32 to);
+    inline Vec3 uniformVec3(const float32 from, const float32 to) { return {uniform(from, to), uniform(from, to), uniform(from, to)}; }
 
     Vec3 uniformSphere();
-    Vec3 uniformHemisphere(const Vec3& normal);
+    Vec3 uniformHemisphere(const Vec3& n);
 }
