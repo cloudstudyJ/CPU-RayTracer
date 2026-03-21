@@ -3,7 +3,7 @@
 #include "vec3.hpp"
 
 struct Camera {
-    float32 yfov;
+    f32 yfov;
 
     Vec3 pos;
     Vec3 look;

@@ -10,9 +10,9 @@ struct HitResult {
     bool isHit{};
     bool isRayOppositeNormal{};
 
-    float32 hitT{INF_F32};
-    float32 u{};
-    float32 v{};
+    f32 hitT{INF_F32};
+    f32 u{};
+    f32 v{};
 
     Vec3 hitPoint;
     Vec3 normal;

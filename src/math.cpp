@@ -3,15 +3,15 @@
 #include <cmath>
 
 namespace Math {
-    float32 abs(const float32 val) noexcept { return std::fabs(val); }
+    f32 abs(const f32 val) noexcept { return std::fabs(val); }
 
-    float32 pow(const float32 x, const float32 y) noexcept { return std::pow(x, y); }
-    float32 sqrt(const float32 val) noexcept { return std::sqrt(val); }
+    f32 pow(const f32 x, const f32 y) noexcept { return std::pow(x, y); }
+    f32 sqrt(const f32 val) noexcept { return std::sqrt(val); }
 
-    float32 sin(const float32 rad) noexcept { return std::sin(rad); }
-    float32 cos(const float32 rad) noexcept { return std::cos(rad); }
-    float32 tan(const float32 rad) noexcept { return std::tan(rad); }
+    f32 sin(const f32 rad) noexcept { return std::sin(rad); }
+    f32 cos(const f32 rad) noexcept { return std::cos(rad); }
+    f32 tan(const f32 rad) noexcept { return std::tan(rad); }
 
-    float32 arccos(const float32 val) noexcept { return std::acos(val);}
-    float32 arctan2(const float32 y, const float32 x) noexcept { return std::atan2(y, x);}
+    f32 arccos(const f32 val) noexcept { return std::acos(val);}
+    f32 arctan2(const f32 y, const f32 x) noexcept { return std::atan2(y, x);}
 }

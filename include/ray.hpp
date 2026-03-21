@@ -4,7 +4,7 @@
 
 struct Ray {
     public:
-        Vec3 at(const float32 t) const noexcept { return (origin + direction * t); }
+        Vec3 at(const f32 t) const noexcept { return (origin + direction * t); }
 
     public:
         Vec3 origin;

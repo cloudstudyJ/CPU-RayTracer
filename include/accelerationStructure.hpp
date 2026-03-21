@@ -25,12 +25,12 @@ class AccelerationStructure {
 
         void build(const std::vector<Object*>& objects);
 
-        HitResult hitTest(const Ray& ray, const float32 tMin, const float32 tMax) noexcept;
+        HitResult hitTest(const Ray& ray, const f32 tMin, const f32 tMax) noexcept;
 
     private:
-        Node* build(std::vector<Object*>& objRefs, const uint32 from, const uint32 to);
+        Node* build(std::vector<Object*>& objRefs, const u32 from, const u32 to);
 
-        Node* traversal(const Ray& ray, const float32 tMin, const float32 tMax);
+        Node* traversal(const Ray& ray, const f32 tMin, const f32 tMax);
 
     private:
         Node* mRoot{};

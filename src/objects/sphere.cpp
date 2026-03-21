@@ -8,7 +8,7 @@ Sphere::Sphere() noexcept
         mPos + mRadius
     };
 }
-Sphere::Sphere(const Vec3& pos, const float32 r, const Material* material) noexcept
+Sphere::Sphere(const Vec3& pos, const f32 r, const Material* material) noexcept
     : Object(pos, material), mRadius(r) {
     mAABB = {
         mPos - mRadius,
@@ -16,4 +16,4 @@ Sphere::Sphere(const Vec3& pos, const float32 r, const Material* material) noexc
     };
 }
 
-HitResult Sphere::hitTest(const Ray& ray, const float32 tMin, const float32 tMax) const { return Solver::hitTest(ray, *this, tMin, tMax); }
+HitResult Sphere::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const { return Solver::hitTest(ray, *this, tMin, tMax); }

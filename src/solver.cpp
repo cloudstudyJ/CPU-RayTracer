@@ -6,33 +6,33 @@
 #include "math.hpp"
 #include "ray.hpp"
 
-HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const float32 tMin, const float32 tMax) {
+HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, const f32 tMax) {
     Vec3 spherePos = sphere.pos();
-    float32 radius = sphere.radius();
+    f32 radius = sphere.radius();
 
     Vec3 ac = spherePos - ray.origin;
-    float32 a = ray.direction.lengthSquare();
-    float32 h = Vec3::dot(ray.direction, ac);
-    float32 c = ac.lengthSquare() - radius * radius;
+    f32 a = ray.direction.lengthSquare();
+    f32 h = Vec3::dot(ray.direction, ac);
+    f32 c = ac.lengthSquare() - radius * radius;
 
-    float32 discriminant = h * h - a * c;
+    f32 discriminant = h * h - a * c;
     if (discriminant < -EPS_F32)
         return {};
 
-    float32 sqrtD = Math::sqrt(Utility::max(discriminant, 0.0f));
-    float32 invA  = 1 / a;
-    float32 t0 = (h - sqrtD) * invA;
-    float32 t1 = (h + sqrtD) * invA;
+    f32 sqrtD = Math::sqrt(Utility::max(discriminant, 0.0f));
+    f32 invA  = 1 / a;
+    f32 t0 = (h - sqrtD) * invA;
+    f32 t1 = (h + sqrtD) * invA;
 
     if (t0 > tMax || t1 < tMin)
         return {};
 
-    float32 t = ((t0 >= tMin) ? t0 : t1);
+    f32 t = ((t0 >= tMin) ? t0 : t1);
     Vec3 hitP = ray.at(t);
     Vec3 outN = (hitP - spherePos) / radius;
     bool isRayOppositeNormal = (Vec3::dot(ray.direction, outN) < 0.0f);
 
-    float32 phi = Math::arctan2(-outN.z, outN.x);
+    f32 phi = Math::arctan2(-outN.z, outN.x);
     if (phi < 0.0f)
         phi += (2 * Math::PI);
 
@@ -49,17 +49,17 @@ HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const float32 tM
 
     return hitResult;
 }
-HitResult Solver::hitTest(const Ray& ray, const Quad& quad, const float32 tMin, const float32 tMax) {
+HitResult Solver::hitTest(const Ray& ray, const Quad& quad, const f32 tMin, const f32 tMax) {
     Vec3 pos = quad.pos();
     Vec3 u   = quad.edgeU();
     Vec3 v   = quad.edgeV();
     Vec3 n   = Vec3::cross(u, v);
 
-    float32 denom = Vec3::dot(n, ray.direction);
+    f32 denom = Vec3::dot(n, ray.direction);
     if (Math::abs(denom) < EPS_F32)
         return {};
 
-    float32 t = Vec3::dot(n, pos - ray.origin) / denom;
+    f32 t = Vec3::dot(n, pos - ray.origin) / denom;
     if (t < tMin || t > tMax)
         return {};
 
@@ -67,8 +67,8 @@ HitResult Solver::hitTest(const Ray& ray, const Quad& quad, const float32 tMin, 
     Vec3 p = hitP - pos;
     Vec3 w = n / n.lengthSquare();
 
-    float32 a = Vec3::dot(w, Vec3::cross(p, v));
-    float32 b = Vec3::dot(w, Vec3::cross(u, p));
+    f32 a = Vec3::dot(w, Vec3::cross(p, v));
+    f32 b = Vec3::dot(w, Vec3::cross(u, p));
     if ((a < 0.0f) || (a > 1.0f) || (b < 0.0f) || (b > 1.0f))
         return {};
 
@@ -89,12 +89,12 @@ HitResult Solver::hitTest(const Ray& ray, const Quad& quad, const float32 tMin, 
     return hitResult;
 }
 
-bool Solver::isIntersect(const Ray& ray, const AABB& aabb, float32 tMin, float32 tMax) {
-    for (uint32 axis = 0; axis < 3; ++axis) {
-        float32 rayO = ray.origin.data[axis];
-        float32 rayD = ray.direction.data[axis];
-        float32 axisMin = aabb.min.data[axis];
-        float32 axisMax = aabb.max.data[axis];
+bool Solver::isIntersect(const Ray& ray, const AABB& aabb, f32 tMin, f32 tMax) {
+    for (u32 axis = 0; axis < 3; ++axis) {
+        f32 rayO = ray.origin.data[axis];
+        f32 rayD = ray.direction.data[axis];
+        f32 axisMin = aabb.min.data[axis];
+        f32 axisMax = aabb.max.data[axis];
 
         if ((rayD * rayD) < 1.0E-12f) {
             if (!Utility::isInRange(rayO, axisMin, axisMax))
@@ -103,10 +103,10 @@ bool Solver::isIntersect(const Ray& ray, const AABB& aabb, float32 tMin, float32
             continue;
         }
 
-        const float32 invDir = 1 / rayD;
+        const f32 invDir = 1 / rayD;
 
-        float32 t0 = (axisMin - rayO) * invDir;
-        float32 t1 = (axisMax - rayO) * invDir;
+        f32 t0 = (axisMin - rayO) * invDir;
+        f32 t1 = (axisMax - rayO) * invDir;
 
         if (t0 > t1)
             Utility::swap(t0, t1);

@@ -10,4 +10,4 @@ Quad::Quad(const Vec3& pos, const Vec3& a, const Vec3& b, const Material* materi
     );
 }
 
-HitResult Quad::hitTest(const Ray& ray, const float32 tMin, const float32 tMax) const { return Solver::hitTest(ray, *this, tMin, tMax); }
+HitResult Quad::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const { return Solver::hitTest(ray, *this, tMin, tMax); }

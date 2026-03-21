@@ -7,7 +7,7 @@ class SolidTexture: public Texture {
         SolidTexture() noexcept = default;
         SolidTexture(const Vec3& albedo) noexcept: mAlbedo(albedo) {}
 
-        Vec3 color(const float32 u, const float32 v) const noexcept override { return mAlbedo; }
+        Vec3 color(const f32 u, const f32 v) const noexcept override { return mAlbedo; }
 
     private:
         Vec3 mAlbedo;

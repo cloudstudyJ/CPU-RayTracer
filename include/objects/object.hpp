@@ -9,7 +9,7 @@ class Object {
     public:
         virtual ~Object() noexcept = default;
 
-        virtual HitResult hitTest(const Ray& ray, const float32 tMin, const float32 tMax) const = 0;
+        virtual HitResult hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const = 0;
 
         Vec3 pos() const noexcept { return mPos; }
 

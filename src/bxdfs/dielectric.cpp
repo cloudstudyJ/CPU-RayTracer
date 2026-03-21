@@ -1,21 +1,21 @@
 #include "bxdfs/dielectric.hpp"
 #include "random.hpp"
 
-float32 schlickApprox(const float32 cos, const float32 refractiveIndex) noexcept {
-    float32 r0 = (1 - refractiveIndex) / (1 + refractiveIndex);
+f32 schlickApprox(const f32 cos, const f32 refractiveIndex) noexcept {
+    f32 r0 = (1 - refractiveIndex) / (1 + refractiveIndex);
     r0 *= r0;
 
-    float32 x  = 1 - cos;
-    float32 x2 = x * x;
+    f32 x  = 1 - cos;
+    f32 x2 = x * x;
 
     return r0 + (1 - r0) * (x2 * x2 * x);
 }
 
 Vec3 Dielectric::sample(const Vec3& wi, const HitResult& surfaceInfo) const noexcept {
     Vec3 in = wi.normalize();
-    float32 inCos = Vec3::dot(-in, surfaceInfo.normal);
-    float32 inSin = Math::sqrt(1 - inCos * inCos);
-    float32 eta   = (surfaceInfo.isRayOppositeNormal ? (1 / mRefractiveIndex) : mRefractiveIndex);
+    f32 inCos = Vec3::dot(-in, surfaceInfo.normal);
+    f32 inSin = Math::sqrt(1 - inCos * inCos);
+    f32 eta   = (surfaceInfo.isRayOppositeNormal ? (1 / mRefractiveIndex) : mRefractiveIndex);
 
     Vec3 out;
 

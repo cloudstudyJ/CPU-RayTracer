@@ -4,5 +4,5 @@
 
 class Texture {
     public:
-        virtual Vec3 color(const float32 u, const float32 v) const noexcept = 0;
+        virtual Vec3 color(const f32 u, const f32 v) const noexcept = 0;
 };

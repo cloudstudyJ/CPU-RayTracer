@@ -9,17 +9,17 @@ class Image {
 
         bool load(const char* file);
 
-        Vec3 color(const uint32 x, const uint32 y) const noexcept;
+        Vec3 color(const u32 x, const u32 y) const noexcept;
 
-        uint8 channels() const noexcept { return mChannels; }
-        uint32 width() const noexcept { return mWidth; }
-        uint32 height() const noexcept { return mHeight; }
+        byte channels() const noexcept { return mChannels; }
+        u32 width() const noexcept { return mWidth; }
+        u32 height() const noexcept { return mHeight; }
 
     private:
-        uint8 mChannels;
+        byte mChannels;
 
-        uint32 mWidth;
-        uint32 mHeight;
+        u32 mWidth;
+        u32 mHeight;
 
-        uint8* mData;
+        byte* mData;
 };

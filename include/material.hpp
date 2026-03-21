@@ -11,5 +11,5 @@ struct Material {
     const Texture* texture{};
 
     Vec3 emitColor;
-    float32 emitIntensity{};
+    f32 emitIntensity{};
 };

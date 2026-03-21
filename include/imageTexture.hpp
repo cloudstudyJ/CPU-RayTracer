@@ -12,7 +12,7 @@ class ImageTexture: public Texture {
         ImageTexture() noexcept: mImage(nullptr) {}
         ImageTexture(std::shared_ptr<Image> image) noexcept: mImage(image) {}
 
-        Vec3 color(const float32 u, const float32 v) const noexcept override;
+        Vec3 color(const f32 u, const f32 v) const noexcept override;
 
     private:
         std::shared_ptr<Image> mImage;

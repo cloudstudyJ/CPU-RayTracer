@@ -2,9 +2,11 @@
 
 #include "accelerationStructure.hpp"
 #include "objects/object.hpp"
-#include "ray.hpp"
 
 #include <vector>
+
+// fwd
+struct Ray;
 
 class World {
     public:
@@ -18,7 +20,7 @@ class World {
         template <typename T, typename ... Args>
         T* addObject(Args&& ... args);
 
-        HitResult traceRay(const Ray& ray, const float32 tMin, const float32 tMax) noexcept { return mAccelerationStructure.hitTest(ray, tMin, tMax); }
+        HitResult traceRay(const Ray& ray, const f32 tMin, const f32 tMax) noexcept { return mAccelerationStructure.hitTest(ray, tMin, tMax); }
 
     private:
         AccelerationStructure mAccelerationStructure;

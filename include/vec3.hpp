@@ -5,45 +5,44 @@
 struct Vec3 {
     public:
         constexpr Vec3() noexcept = default;
-        constexpr Vec3(const float32 a, const float32 b, const float32 c) noexcept: data{a, b, c} {}
+        constexpr Vec3(const f32 a, const f32 b, const f32 c) noexcept: data{a, b, c} {}
 
-        inline Vec3& operator*=(const float32 s) noexcept;
+        inline Vec3& operator*=(const f32 s) noexcept;
         inline Vec3& operator+=(const Vec3& v) noexcept;
 
-        Vec3 operator*(const float32 s) const noexcept { return {x * s, y * s, z * s}; }
-        Vec3 operator/(const float32 s) const { return {x / s, y / s, z / s}; }
-        Vec3 operator+(const float32 s) const noexcept { return {x + s, y + s, z + s}; }
-        Vec3 operator-(const float32 s) const noexcept { return {x - s, y - s, z - s}; }
+        Vec3 operator*(const f32 s) const noexcept { return {x * s, y * s, z * s}; }
+        Vec3 operator/(const f32 s) const { return {x / s, y / s, z / s}; }
+        Vec3 operator+(const f32 s) const noexcept { return {x + s, y + s, z + s}; }
+        Vec3 operator-(const f32 s) const noexcept { return {x - s, y - s, z - s}; }
         Vec3 operator*(const Vec3& v) const noexcept { return {x * v.x, y * v.y, z * v.z}; }
         Vec3 operator+(const Vec3& v) const noexcept { return {x + v.x, y + v.y, z + v.z}; }
         Vec3 operator-(const Vec3& v) const noexcept { return {x - v.x, y - v.y, z - v.z}; }
-
         Vec3 operator-() const noexcept { return {-x, -y, -z}; }
 
-        float32 length() const noexcept { return (Math::sqrt(lengthSquare())); }
-        float32 lengthSquare() const noexcept { return (x * x + y * y + z * z); }
+        f32 length() const noexcept { return (Math::sqrt(lengthSquare())); }
+        f32 lengthSquare() const noexcept { return (x * x + y * y + z * z); }
 
         Vec3 normalize() const { return {*this / length()}; }
 
         bool isZero() const noexcept { return (lengthSquare() < 1.0e-12f); }
 
-        static float32 dot(const Vec3& a, const Vec3& b) noexcept { return (a.x * b.x + a.y * b.y + a.z * b.z); }
+        static f32 dot(const Vec3& a, const Vec3& b) noexcept { return (a.x * b.x + a.y * b.y + a.z * b.z); }
         static inline Vec3 cross(const Vec3& a, const Vec3& b) noexcept;
 
         static Vec3 reflect(const Vec3& v, const Vec3& n) noexcept { return {v - n * (2 * Vec3::dot(v, n))}; }
-        static Vec3 lerp(const Vec3& a, const Vec3& b, const float32 t) noexcept { return (a + (b - a) * t); }
+        static Vec3 lerp(const Vec3& a, const Vec3& b, const f32 t) noexcept { return (a + (b - a) * t); }
 
     public:
         union {
-            float32 data[3]{};
+            f32 data[3]{};
 
-            struct { float32 x, y, z; };
-            struct { float32 r, g, b; };
-            struct { float32 u, v, w; };
+            struct { f32 x, y, z; };
+            struct { f32 r, g, b; };
+            struct { f32 u, v, w; };
         };
 };
 
-inline Vec3& Vec3::operator*=(const float32 s) noexcept {
+inline Vec3& Vec3::operator*=(const f32 s) noexcept {
     x *= s;
     y *= s;
     z *= s;

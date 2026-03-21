@@ -1,6 +1,5 @@
 #include "ray.hpp"
 #include "camera.hpp"
-#include "viewport.hpp"
 #include "math.hpp"
 #include "hitResult.hpp"
 #include "utility.hpp"
@@ -10,6 +9,7 @@
 #include "objects.hpp"
 #include "bxdfs.hpp"
 #include "world.hpp"
+#include "vec2.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -19,22 +19,25 @@
 #include <thread>
 #include <atomic>
 
-constexpr uint32 IMG_W = 600;
-constexpr uint32 IMG_H = 600;
-constexpr float32 ASPECT_RATIO = static_cast<float32>(IMG_W) / IMG_H;
+constexpr u32 IMG_W = 600;
+constexpr u32 IMG_H = 600;
+constexpr f32 ASPECT_RATIO = static_cast<f32>(IMG_W) / IMG_H;
 
-constexpr uint32  SAMPLES_PER_PIXEL = 200;
-constexpr float32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
-constexpr uint32 MAX_RAY_BOUNCES = 50;
+constexpr u32 SAMPLES_PER_PIXEL = 200;
+constexpr f32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
+constexpr u32 MAX_RAY_BOUNCES   = 50;
 
 constexpr Vec3 WORLD_Y     = {0.0f, 1.0f, 0.0f};
 constexpr Vec3 COLOR_BLACK = {0.0f, 0.0f, 0.0f};
 constexpr Vec3 COLOR_WHITE = {1.0f, 1.0f, 1.0f};
 
-const uint32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
+const u32 THREADS        = Utility::max(1u, std::thread::hardware_concurrency());
+const u16 SQRT_SPP       = static_cast<u16>(Math::sqrt(SAMPLES_PER_PIXEL));
+const f32 INV_SQRT_SPP   = 1.0f / SQRT_SPP;
+const f32 SQRT_SPP_SCALE = 1.0f / (SQRT_SPP * SQRT_SPP);
 
-std::vector<Vec3>  framebuffer(IMG_W * IMG_H);
-std::vector<uint8> snapshot(IMG_W * IMG_H * 3);
+std::vector<Vec3> framebuffer(IMG_W * IMG_H);
+std::vector<byte> snapshot(IMG_W * IMG_H * 3);
 
 std::vector<std::shared_ptr<BxDF>>     bxdfs;
 std::vector<std::shared_ptr<Texture>>  textures;
@@ -52,7 +55,7 @@ Vec3 gammaCorrection(const Vec3& linearColor) {
 
 // Black Backround
 Vec3 missShader(const Ray& ray) { return COLOR_BLACK; }
-Vec3 hitShader(const Ray& ray, const HitResult& hitResult, uint16 depth = 1) {
+Vec3 hitShader(const Ray& ray, const HitResult& hitResult, u16 depth = 1) {
     if (depth > MAX_RAY_BOUNCES)
         return {};
 
@@ -91,24 +94,25 @@ void makeCornellBox() {
 }
 
 int main() {
-    Camera camera;
-    camera.yfov = 40.0f;
-    camera.pos  = {278.0f, 278.0f, -800.0f};
-    camera.look = {278.0f, 278.0f, 0.0f};
+    Camera camera = {
+        .yfov = 40.0f,
+        .pos  = {278.0f, 278.0f, -800.0f},
+        .look = {278.0f, 278.0f, 0.0f}
+    };
 
     Vec3 nz = camera.pos - camera.look;
-    float32 focalLength = nz.length();
+    f32 focalLength = nz.length();
 
-    Viewport viewport;
-    viewport.height = 2 * focalLength * Math::tan(Math::toRad(camera.yfov / 2));
-    viewport.width  = viewport.height * ASPECT_RATIO;
+    Vec2 viewport;
+    viewport.y = 2 * focalLength * Math::tan(Math::toRad(camera.yfov / 2));
+    viewport.x = viewport.y * ASPECT_RATIO;
 
     Vec3 z = nz.normalize();
     Vec3 x = Vec3::cross(WORLD_Y, z).normalize();
     Vec3 y = Vec3::cross(z, x);
 
-    Vec3 viewportU = x * viewport.width;
-    Vec3 viewportV = y * -viewport.height;
+    Vec3 viewportU = x * viewport.x;
+    Vec3 viewportV = y * -viewport.y;
 
     Vec3 viewportdU = viewportU / IMG_W;
     Vec3 viewportdV = viewportV / IMG_H;
@@ -125,32 +129,35 @@ int main() {
     std::chrono::steady_clock::time_point start, end;
     start = std::chrono::steady_clock::now();
     {
-        std::atomic<uint32> nextChunk{};
+        std::atomic<u32> nextChunk{};
 
         auto render = [&]() {
             while (true) {
-                uint32 yFrom = nextChunk.fetch_add(1, std::memory_order_relaxed);
-                uint32 yTo   = Utility::min(yFrom + 1, IMG_H);
+                u32 yFrom = nextChunk.fetch_add(1, std::memory_order_relaxed);
+                u32 yTo   = Utility::min(yFrom + 1, IMG_H);
 
                 if (yFrom >= IMG_H)
                     break;
 
-                for (uint32 y = yFrom; y < yTo; ++y) {
-                    for (uint32 x = 0; x < IMG_W; ++x) {
+                for (u32 y = yFrom; y < yTo; ++y) {
+                    for (u32 x = 0; x < IMG_W; ++x) {
                         Vec3 color;
 
-                        for (uint16 sample = 0; sample < SAMPLES_PER_PIXEL; ++sample) {
-                            Vec3 jitter = (viewportdU * (x + Random::uniform())) + (viewportdV * (y + Random::uniform()));
-                            Vec3 samplePos = viewportLT + jitter;
-                            Ray  ray       = {camera.pos, samplePos - camera.pos};
+                        for (u16 sampleY = 0; sampleY < SQRT_SPP; ++sampleY) {
+                            for (u16 sampleX = 0; sampleX < SQRT_SPP; ++sampleX) {
+                                f32 offsetX = x + ((sampleX + Random::uniform()) * INV_SQRT_SPP);
+                                f32 offsetY = y + ((sampleY + Random::uniform()) * INV_SQRT_SPP);
 
-                            // primary ray
-                            HitResult hitResult = world.traceRay(ray, RAY_T_MIN, INF_F32);
-                            color += (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
+                                Vec3 samplePos = viewportLT + (viewportdU * offsetX) + (viewportdV * offsetY);
+                                Ray  ray       = {camera.pos, samplePos - camera.pos};
+
+                                HitResult hitResult = world.traceRay(ray, RAY_T_MIN, INF_F32);
+                                color += (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
+                            }
                         }
-                        color *= SAMPLE_SCALE;
+                        color *= SQRT_SPP_SCALE;
 
-                        uint32 idx = (y * IMG_W + x);
+                        u32 idx = (y * IMG_W + x);
 
                         framebuffer[idx] = color;
                         color = gammaCorrection(color);
@@ -158,15 +165,15 @@ int main() {
                         color.g = Utility::clamp(color.y, 0.0f, 1.0f);
                         color.b = Utility::clamp(color.z, 0.0f, 1.0f);
 
-                        snapshot[idx * 3    ] = static_cast<uint8>(255.999f * color.r);
-                        snapshot[idx * 3 + 1] = static_cast<uint8>(255.999f * color.g);
-                        snapshot[idx * 3 + 2] = static_cast<uint8>(255.999f * color.b);
+                        snapshot[idx * 3    ] = static_cast<byte>(255.999f * color.r);
+                        snapshot[idx * 3 + 1] = static_cast<byte>(255.999f * color.g);
+                        snapshot[idx * 3 + 2] = static_cast<byte>(255.999f * color.b);
                     }
                 }
             }
         };
 
-        for (uint16 i = 0; i < THREADS; ++i)
+        for (u16 i = 0; i < THREADS; ++i)
             threads.emplace_back(render);
 
         for (auto& thread: threads)

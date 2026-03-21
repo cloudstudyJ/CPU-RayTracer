@@ -6,20 +6,20 @@
 #include <algorithm>
 
 namespace {
-    uint32 longestAxis(const AABB& aabb) {
-        const float32 xLength = aabb.max.x - aabb.min.x;
-        const float32 yLength = aabb.max.y - aabb.min.y;
-        const float32 zLength = aabb.max.z - aabb.min.z;
+    u32 longestAxis(const AABB& aabb) {
+        const f32 xLength = aabb.max.x - aabb.min.x;
+        const f32 yLength = aabb.max.y - aabb.min.y;
+        const f32 zLength = aabb.max.z - aabb.min.z;
 
         if (xLength > yLength) return ((xLength > zLength) ? 0 : 2);
         else                   return ((yLength > zLength) ? 1 : 2);
     }
 
     // [from, to)
-    AABB buildAABB(const std::vector<Object*>& objRefs, const uint32 from, const uint32 to) {
+    AABB buildAABB(const std::vector<Object*>& objRefs, const u32 from, const u32 to) {
         AABB result;
 
-        for (uint32 i = from; i < to; ++i)
+        for (u32 i = from; i < to; ++i)
             result = AABB::unite(result, objRefs[i]->aabb());
 
         return result;
@@ -29,7 +29,7 @@ namespace {
 AccelerationStructure::~AccelerationStructure() noexcept {
     Node* stk[128];
 
-    uint32 ptr{};
+    u32 ptr{};
     stk[ptr++] = mRoot;
 
     while (ptr) {
@@ -45,13 +45,13 @@ AccelerationStructure::~AccelerationStructure() noexcept {
 // [from, to)
 void AccelerationStructure::build(const std::vector<Object*>& objects) {
     std::vector<Object*> objRefs = objects;
-    mRoot = build(objRefs, 0, static_cast<uint32>(objects.size()));
+    mRoot = build(objRefs, 0, static_cast<u32>(objects.size()));
 }
 
-HitResult AccelerationStructure::hitTest(const Ray& ray, const float32 tMin, const float32 tMax) noexcept {
+HitResult AccelerationStructure::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) noexcept {
     Node* stk[128];
 
-    uint32 ptr{};
+    u32 ptr{};
     stk[ptr++] = mRoot;
 
     HitResult hitResult;
@@ -83,18 +83,18 @@ HitResult AccelerationStructure::hitTest(const Ray& ray, const float32 tMin, con
 }
 
 // [from, to)
-AccelerationStructure::Node* AccelerationStructure::build(std::vector<Object*>& objRefs, const uint32 from, const uint32 to) {
+AccelerationStructure::Node* AccelerationStructure::build(std::vector<Object*>& objRefs, const u32 from, const u32 to) {
     Node* newNode = new Node;
     newNode->aabb = buildAABB(objRefs, from, to);
 
-    const uint32 nodeCount = to - from;
+    const u32 nodeCount = to - from;
     if (nodeCount == 1) {
         newNode->obj = objRefs[from];
         return newNode;
     }
 
-    const uint32 axis = longestAxis(newNode->aabb);
-    const uint32 midIdx = from + (nodeCount >> 1);
+    const u32 axis = longestAxis(newNode->aabb);
+    const u32 midIdx = from + (nodeCount >> 1);
 
     std::nth_element(
         objRefs.begin() + from,

@@ -22,7 +22,7 @@ Box::Box(const Vec3& a, const Vec3& b, const Material* material) noexcept
     mAABB = {min, max};
 }
 
-HitResult Box::hitTest(const Ray& ray, const float32 tMin, const float32 tMax) const {
+HitResult Box::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const {
     HitResult hitResult;
     hitResult.hitT = tMax;
 

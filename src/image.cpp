@@ -13,30 +13,30 @@ Image::~Image() noexcept { stbi_image_free(mData); }
 
 bool Image::load(const char* file) {
     {
-        int x, y, _;
+        i32 x, y, _;
         mData = stbi_load(file, &x, &y, &_, 3);
 
         if (!mData)
             return false;
 
-        mWidth = static_cast<uint32>(x);
-        mHeight = static_cast<uint32>(y);
+        mWidth = static_cast<u32>(x);
+        mHeight = static_cast<u32>(y);
     }
 
     return true;
 }
 
-Vec3 Image::color(const uint32 x, const uint32 y) const noexcept {
-    constexpr float32 INV_255 = 1.0f / 255;
+Vec3 Image::color(const u32 x, const u32 y) const noexcept {
+    constexpr f32 INV_255 = 1.0f / 255;
 
     if (!mData || (x >= mWidth) || (y >= mHeight))
         return {1.0f, 0.0f, 1.0f};
 
-    const uint32 idx = (y * mWidth + x) * 3;
+    const u32 idx = (y * mWidth + x) * 3;
 
     return {
-        static_cast<float32>(mData[idx    ]) * INV_255,
-        static_cast<float32>(mData[idx + 1]) * INV_255,
-        static_cast<float32>(mData[idx + 2]) * INV_255
+        static_cast<f32>(mData[idx    ]) * INV_255,
+        static_cast<f32>(mData[idx + 1]) * INV_255,
+        static_cast<f32>(mData[idx + 2]) * INV_255
     };
 }
