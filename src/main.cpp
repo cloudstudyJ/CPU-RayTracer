@@ -27,6 +27,10 @@ constexpr u32 SAMPLES_PER_PIXEL = 200;
 constexpr f32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
 constexpr u32 MAX_RAY_BOUNCES   = 50;
 
+constexpr f32 INV_PI = 1 / Math::PI;
+constexpr f32 TWO_PI = Math::PI * 2;
+constexpr f32 INV_TWO_PI = 1 / TWO_PI;
+
 constexpr Vec3 WORLD_Y     = {0.0f, 1.0f, 0.0f};
 constexpr Vec3 COLOR_BLACK = {0.0f, 0.0f, 0.0f};
 constexpr Vec3 COLOR_WHITE = {1.0f, 1.0f, 1.0f};
@@ -54,22 +58,29 @@ Vec3 gammaCorrection(const Vec3& linearColor) {
 }
 
 // Black Backround
-Vec3 missShader(const Ray& ray) { return COLOR_BLACK; }
+Vec3 missShader() { return COLOR_BLACK; }
 Vec3 hitShader(const Ray& ray, const HitResult& hitResult, u16 depth = 1) {
     if (depth > MAX_RAY_BOUNCES)
         return {};
 
-    // if object is light
-    if (!hitResult.material->bxdf)
-        return (hitResult.material->emitColor * hitResult.material->emitIntensity);
+    const Material* material = hitResult.material;
+    const BxDF*     bxdf     = material->bxdf;
 
-    Vec3 wo = hitResult.material->bxdf->sample(ray.direction, hitResult);
+    Vec3 L_e = material->emitColor * material->emitIntensity;
+    if (!bxdf)  // if object is light
+        return L_e;
 
-    HitResult bounceHitResult = world.traceRay(Ray{hitResult.hitPoint, wo}, RAY_T_MIN, INF_F32);
-    if (bounceHitResult.isHit)
-        return hitResult.material->texture->color(hitResult.u, hitResult.v) * hitShader(Ray{hitResult.hitPoint, wo}, bounceHitResult, depth + 1);
+    Vec3 wi    = bxdf->sample(ray.direction, hitResult);
+    Ray  wiRay = {hitResult.hitPoint, wi};
 
-    return missShader(Ray{hitResult.hitPoint, wo}) * hitResult.material->texture->color(hitResult.u, hitResult.v);
+    HitResult wiHitResult = world.traceRay(wiRay, RAY_T_MIN, INF_F32);
+    Vec3 L_i      = ((wiHitResult.isHit) ? hitShader(wiRay, wiHitResult, depth + 1) : missShader());
+    Vec3 albedo   = material->texture->color(hitResult.u, hitResult.v);
+    Vec3 f        = albedo * INV_PI;
+    f32  cosTheta = Vec3::dot(hitResult.normal, wi);
+    f32  pdf      = INV_TWO_PI;
+
+    return (L_e + (f * L_i * cosTheta) / pdf);
 }
 
 void makeCornellBox() {
@@ -103,13 +114,13 @@ int main() {
     Vec3 nz = camera.pos - camera.look;
     f32 focalLength = nz.length();
 
-    Vec2 viewport;
-    viewport.y = 2 * focalLength * Math::tan(Math::toRad(camera.yfov / 2));
-    viewport.x = viewport.y * ASPECT_RATIO;
-
     Vec3 z = nz.normalize();
     Vec3 x = Vec3::cross(WORLD_Y, z).normalize();
     Vec3 y = Vec3::cross(z, x);
+
+    Vec2 viewport;
+    viewport.y = 2 * focalLength * Math::tan(Math::toRad(camera.yfov / 2));
+    viewport.x = viewport.y * ASPECT_RATIO;
 
     Vec3 viewportU = x * viewport.x;
     Vec3 viewportV = y * -viewport.y;
@@ -152,7 +163,7 @@ int main() {
                                 Ray  ray       = {camera.pos, samplePos - camera.pos};
 
                                 HitResult hitResult = world.traceRay(ray, RAY_T_MIN, INF_F32);
-                                color += (hitResult.isHit ? hitShader(ray, hitResult) : missShader(ray));
+                                color += (hitResult.isHit ? hitShader(ray, hitResult) : missShader());
                             }
                         }
                         color *= SQRT_SPP_SCALE;
