@@ -25,7 +25,7 @@ constexpr f32 ASPECT_RATIO = static_cast<f32>(IMG_W) / IMG_H;
 
 constexpr u32 SAMPLES_PER_PIXEL = 200;
 constexpr f32 SAMPLE_SCALE      = 1.0f / SAMPLES_PER_PIXEL;
-constexpr u32 MAX_RAY_BOUNCES   = 50;
+constexpr u32 MAX_RAY_BOUNCES   = 8;
 
 constexpr f32 INV_PI = 1 / Math::PI;
 constexpr f32 TWO_PI = Math::PI * 2;
@@ -48,12 +48,35 @@ std::vector<std::shared_ptr<Texture>>  textures;
 std::vector<std::shared_ptr<Material>> materials;
 
 World world;
+Quad* quadLight;
 
 Vec3 gammaCorrection(const Vec3& linearColor) {
     return {
         ((linearColor.x > 0.0f) ? Math::sqrt(linearColor.x) : 0.0f),
         ((linearColor.y > 0.0f) ? Math::sqrt(linearColor.y) : 0.0f),
         ((linearColor.z > 0.0f) ? Math::sqrt(linearColor.z) : 0.0f)
+    };
+}
+
+struct LightSample {
+    Vec3 p;
+    Vec3 n;
+    f32  pdf{};
+};
+
+LightSample sampleQuad(const Quad& quad) {
+    const Vec3 edgeU = quad.edgeU();
+    const Vec3 edgeV = quad.edgeV();
+
+    f32  u = Random::uniform();
+    f32  v = Random::uniform();
+    Vec3 n = Vec3::cross(edgeU, edgeV);
+    f32  a = n.length();
+
+    return {
+        .p   = quad.pos() + (edgeU * u) + (edgeV * v),
+        .n   = n / a,
+        .pdf = 1 / a
     };
 }
 
@@ -67,20 +90,40 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, u16 depth = 1) {
     const BxDF*     bxdf     = material->bxdf;
 
     Vec3 L_e = material->emitColor * material->emitIntensity;
+    Vec3 L_direct, L_indirect;
+
     if (!bxdf)  // if object is light
         return L_e;
 
+    // Direct Lighting
+    LightSample lightSample = sampleQuad(*quadLight);
+    Vec3        wiLight     = lightSample.p - hitResult.hitPoint;
+    f32         r           = wiLight.length();
+                wiLight     = wiLight / r;
+    Ray         wiLightRay  = {hitResult.hitPoint, wiLight};
+    f32         cosTheta    = Vec3::dot(hitResult.normal, wiLight);
+    f32         cosPhi      = Vec3::dot(lightSample.n, -wiLight);
+    Vec3        f           = material->texture->color(hitResult.u, hitResult.v) * INV_PI;
+
+    // visbility check
+    HitResult shadowHitResult = world.traceRay(wiLightRay, RAY_T_MIN, r - RAY_T_MIN);
+    if (((cosTheta > 0.0f) && (cosPhi > 0.0f)) && !shadowHitResult.isHit) {
+        Vec3 L_le = quadLight->material()->emitColor * quadLight->material()->emitIntensity;
+
+        L_direct = (f * L_le * cosTheta * cosPhi) / (r * r * lightSample.pdf);
+    }
+
+    // Indirect Lighting
     Vec3 wi    = bxdf->sample(ray.direction, hitResult);
     Ray  wiRay = {hitResult.hitPoint, wi};
 
     HitResult wiHitResult = world.traceRay(wiRay, RAY_T_MIN, INF_F32);
-    Vec3 L_i      = ((wiHitResult.isHit) ? hitShader(wiRay, wiHitResult, depth + 1) : missShader());
-    Vec3 albedo   = material->texture->color(hitResult.u, hitResult.v);
-    Vec3 f        = albedo * INV_PI;
-    f32  cosTheta = Vec3::dot(hitResult.normal, wi);
-    f32  pdf      = INV_TWO_PI;
+    Vec3      L_i         = (wiHitResult.isHit ? hitShader(wiRay, wiHitResult, depth + 1) : missShader());
+              cosTheta    = Vec3::dot(hitResult.normal, wi);
+    f32       pdf         = INV_TWO_PI;
+              L_indirect  = (f * L_i * cosTheta) / pdf;
 
-    return (L_e + (f * L_i * cosTheta) / pdf);
+    return L_e + L_direct + L_indirect;
 }
 
 void makeCornellBox() {
@@ -91,9 +134,9 @@ void makeCornellBox() {
     textures.push_back(std::make_shared<SolidTexture>(Vec3{0.73f, 0.73f, 0.73f}));  // white
     textures.push_back(std::make_shared<SolidTexture>(Vec3{1.0f, 1.0f, 1.0f}));     // pure white
 
-    materials.push_back(std::make_shared<Material>(Material{bxdfs[0].get(), textures[0].get()}));                           // green wall (Lambertian)
-    materials.push_back(std::make_shared<Material>(Material{bxdfs[0].get(), textures[1].get()}));                           // red   wall (Lambertian)
-    materials.push_back(std::make_shared<Material>(Material{bxdfs[0].get(), textures[2].get()}));                           // white wall (Lambertian)
+    materials.push_back(std::make_shared<Material>(Material{bxdfs[0].get(), textures[0].get()}));                // green wall
+    materials.push_back(std::make_shared<Material>(Material{bxdfs[0].get(), textures[1].get()}));                // red   wall
+    materials.push_back(std::make_shared<Material>(Material{bxdfs[0].get(), textures[2].get()}));                // white wall
     materials.push_back(std::make_shared<Material>(Material{nullptr, textures[3].get(), COLOR_WHITE, 15.0f}));   // light
 
     world.addObject<Quad>(Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, materials[0].get());
@@ -101,7 +144,7 @@ void makeCornellBox() {
     world.addObject<Quad>(Vec3{0.0f, 0.0f, 0.0f}, Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, 555.0f}, materials[2].get());
     world.addObject<Quad>(Vec3{555.0f, 555.0f, 555.0f}, Vec3{-555.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, -555.0f}, materials[2].get());
     world.addObject<Quad>(Vec3{0.0f, 0.0f, 555.0f}, Vec3{555.0f, 0.0f, 0.0f}, Vec3{0.0f, 555.0f, 0.0f}, materials[2].get());
-    world.addObject<Quad>(Vec3{343.0f, 554.0f, 332.0f}, Vec3{-130.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, -105.0f}, materials[3].get());
+    quadLight = world.addObject<Quad>(Vec3{343.0f, 554.0f, 332.0f}, Vec3{-130.0f, 0.0f, 0.0f}, Vec3{0.0f, 0.0f, -105.0f}, materials[3].get());
 }
 
 int main() {
