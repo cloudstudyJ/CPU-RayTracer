@@ -3,12 +3,15 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
-Image::Image() noexcept: mWidth(0), mHeight(0), mChannels(3), mData(nullptr) {
-    static const bool initOnce = []() {
+namespace {
+    const bool initSTBI = []() {
         stbi_set_flip_vertically_on_load(true);
         return true;
     }();
 }
+
+Image::Image(u32 width, u32 height, byte channels)
+    : mWidth(width), mHeight(height), mChannels(channels), mData(new byte[width * height * channels]{}) {}
 Image::~Image() noexcept { stbi_image_free(mData); }
 
 bool Image::load(const char* file) {
@@ -19,7 +22,7 @@ bool Image::load(const char* file) {
         if (!mData)
             return false;
 
-        mWidth = static_cast<u32>(x);
+        mWidth  = static_cast<u32>(x);
         mHeight = static_cast<u32>(y);
     }
 
@@ -27,7 +30,7 @@ bool Image::load(const char* file) {
 }
 
 Vec3 Image::color(const u32 x, const u32 y) const noexcept {
-    constexpr f32 INV_255 = 1.0f / 255;
+    constexpr f32 INV_255{1.0f / 255};
 
     if (!mData || (x >= mWidth) || (y >= mHeight))
         return {1.0f, 0.0f, 1.0f};

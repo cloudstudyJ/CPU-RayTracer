@@ -5,7 +5,7 @@
 class Quad: public Object {
     public:
         Quad() noexcept;
-        Quad(const Vec3& pos, const Vec3& a, const Vec3& b, const Material* material) noexcept;
+        Quad(const Vec3& pos, const Vec3& a, const Vec3& b, std::shared_ptr<const Material> material = {}) noexcept;
 
         HitResult hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const override;
 

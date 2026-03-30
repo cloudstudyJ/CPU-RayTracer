@@ -3,7 +3,7 @@
 
 Box::Box() noexcept
     : Object() {}
-Box::Box(const Vec3& a, const Vec3& b, const Material* material) noexcept
+Box::Box(const Vec3& a, const Vec3& b, std::shared_ptr<const Material> material) noexcept
     : Object((a + b) / 2, material) {
     Vec3 min = {Utility::min(a.x, b.x), Utility::min(a.y, b.y), Utility::min(a.z, b.z)};
     Vec3 max = {Utility::max(a.x, b.x), Utility::max(a.y, b.y), Utility::max(a.z, b.z)};

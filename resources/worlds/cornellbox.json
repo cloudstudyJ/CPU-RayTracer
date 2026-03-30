@@ -1,0 +1,162 @@
+{
+    "Renderer": {
+        "Resolution": [1200, 1200],
+        "Sampling"  : {
+            "SamplesPerPixel": 3000,
+            "MaxRayBounces"  : 8
+        }
+    },
+
+    "Materials": [
+        {
+            "Name"   : "Wall_Green",
+            "BxDF"   : {
+                "Type": "Lambertian"
+            },
+            "Texture": {
+                "Type" : "Solid",
+                "Color": [0.12, 0.45, 0.15]
+            }
+        },
+        {
+            "Name"   : "Wall_Red",
+            "BxDF"   : {
+                "Type": "Lambertian"
+            },
+            "Texture": {
+                "Type" : "Solid",
+                "Color": [0.65, 0.05, 0.05]
+            }
+        },
+        {
+            "Name"   : "Wall_White",
+            "BxDF"   : {
+                "Type": "Lambertian"
+            },
+            "Texture": {
+                "Type" : "Solid",
+                "Color": [0.73, 0.73, 0.73]
+            }
+        }
+    ],
+    "Objects": [
+        {
+            "Name"     : "CornellBox_Wall_Left",
+            "Geometry" : {
+                "Type": "Quad",
+                "U"   : [0.0, 555.0, 0.0],
+                "V"   : [0.0, 0.0, 555.0]
+            },
+            "Transform": {
+                "Position": [555.0, 0.0, 0.0],
+                "Rotation": [  0.0, 0.0, 0.0],
+                "Scale"   : [  1.0, 1.0, 1.0]
+            },
+            "Material": "Wall_Green"
+        },
+        {
+            "Name"     : "CornellBox_Wall_Right",
+            "Geometry" : {
+                "Type": "Quad",
+                "U"   : [0.0, 555.0, 0.0],
+                "V"   : [0.0, 0.0, 555.0]
+            },
+            "Transform": {
+                "Position": [0.0, 0.0, 0.0],
+                "Rotation": [0.0, 0.0, 0.0],
+                "Scale"   : [1.0, 1.0, 1.0]
+            },
+            "Material": "Wall_Red"
+        },
+        {
+            "Name"     : "CornellBox_Wall_Floor",
+            "Geometry" : {
+                "Type": "Quad",
+                "U"   : [555.0, 0.0, 0.0],
+                "V"   : [0.0, 0.0, 555.0]
+            },
+            "Transform": {
+                "Position": [0.0, 0.0, 0.0],
+                "Rotation": [0.0, 0.0, 0.0],
+                "Scale"   : [1.0, 1.0, 1.0]
+            },
+            "Material": "Wall_White"
+        },
+        {
+            "Name"     : "CornellBox_Wall_Ceil",
+            "Geometry" : {
+                "Type": "Quad",
+                "U"   : [-555.0, 0.0, 0.0],
+                "V"   : [0.0, 0.0, -555.0]
+            },
+            "Transform": {
+                "Position": [555.0, 555.0, 555.0],
+                "Rotation": [  0.0,   0.0,   0.0],
+                "Scale"   : [  1.0,   1.0,   1.0]
+            },
+            "Material": "Wall_White"
+        },
+        {
+            "Name"     : "CornellBox_Wall_Back",
+            "Geometry" : {
+                "Type": "Quad",
+                "U"   : [555.0, 0.0, 0.0],
+                "V"   : [0.0, 555.0, 0.0]
+            },
+            "Transform": {
+                "Position": [0.0, 0.0, 555.0],
+                "Rotation": [0.0, 0.0,   0.0],
+                "Scale"   : [1.0, 1.0,   1.0]
+            },
+            "Material": "Wall_White"
+        },
+        {
+            "Name"     : "LightQuad1",
+            "Geometry" : {
+                "Type": "Quad",
+                "U"   : [-130.0, 0.0, 0.0],
+                "V"   : [0.0, 0.0, -105.0]
+            },
+            "Transform": {
+                "Position": [343.0, 554.0, 332.0],
+                "Rotation": [0.0, 0.0, 0.0],
+                "Scale"   : [1.0, 1.0, 1.0]
+            }
+        },
+        {
+            "Name"     : "Box1",
+            "Geometry" : {
+                "Type": "Box",
+                "P1"  : [130.0,   0.0,  65.0],
+                "P2"  : [295.0, 165.0, 230.0]
+            },
+            "Transform": {
+                "Position": [0.0, 0.5, 0.0],
+                "Rotation": [0.0, 0.0, 0.0],
+                "Scale"   : [1.0, 1.0, 1.0]
+            },
+            "Material": "Wall_White"
+        },
+        {
+            "Name"     : "Box2",
+            "Geometry" : {
+                "Type": "Box",
+                "P1"  : [265.0,   0.0, 295.0],
+                "P2"  : [430.0, 330.0, 460.0]
+            },
+            "Transform": {
+                "Position": [0.0, 0.5, 0.0],
+                "Rotation": [0.0, 0.0, 0.0],
+                "Scale"   : [1.0, 1.0, 1.0]
+            },
+            "Material": "Wall_White"
+        }
+    ],
+    "Lights": [
+        {
+            "Object"   : "LightQuad1",
+            "Color"    : [1.0, 1.0, 1.0],
+            "Intensity": 15.0
+        }
+    ]
+}

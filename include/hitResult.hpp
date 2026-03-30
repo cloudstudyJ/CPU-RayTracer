@@ -4,7 +4,7 @@
 #include "constants.hpp"
 
 // fwd
-struct Material;
+struct Object;
 
 struct HitResult {
     bool isHit{};
@@ -17,5 +17,5 @@ struct HitResult {
     Vec3 hitPoint;
     Vec3 normal;
 
-    const Material* material{};
+    const Object* object{};
 };

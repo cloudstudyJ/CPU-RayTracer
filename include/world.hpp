@@ -2,38 +2,50 @@
 
 #include "accelerationStructure.hpp"
 #include "objects/object.hpp"
+#include "components/light.hpp"
 
-#include <vector>
+#include <utility>
+#include <memory>
 
 // fwd
 struct Ray;
 
 class World {
-    public:
-        ~World() noexcept {
-            for (Object* object: mObjects)
-                delete object;
-        }
+    World(const World&) = delete;
+    World& operator=(const World&) = delete;
 
-        void buildAccelerationStructure() { mAccelerationStructure.build(mObjects); }
+    public:
+        World() noexcept = default;
+        World(World&& other) noexcept;
+        ~World() noexcept;
+
+        World& operator=(World&& other) noexcept;
+
+        void buildAccelerationStructure() { mAS.build(mObjects); }
 
         template <typename T, typename ... Args>
         T* addObject(Args&& ... args);
 
-        HitResult traceRay(const Ray& ray, const f32 tMin, const f32 tMax) noexcept { return mAccelerationStructure.hitTest(ray, tMin, tMax); }
+        void addLight(Object* obj, const Light& lightInfo) { mLights.push_back(std::pair<Object*, Light>(obj, lightInfo)); }
+        void clearObjects() noexcept;
+
+        HitResult traceRay(const Ray& ray, const f32 tMin, const f32 tMax) noexcept { return mAS.hitTest(ray, tMin, tMax); }
+
+        const std::vector<std::pair<Object*, Light>>& getLights() const noexcept { return mLights; }
 
     private:
-        AccelerationStructure mAccelerationStructure;
+        AccelerationStructure mAS;
 
-        std::vector<Object*> mObjects;
+        std::vector<std::unique_ptr<Object>>   mObjects;
+        std::vector<std::pair<Object*, Light>> mLights;
 };
 
 template <typename T, typename ... Args>
 T* World::addObject(Args&& ... args) {
     static_assert(std::is_base_of_v<Object, T>, "Template type T must be derived from Object!");
 
-    T* newObject = new T(std::forward<Args>(args)...);
-    mObjects.push_back(newObject);
+    auto newObject = std::make_unique<T>(std::forward<Args>(args)...);
+    mObjects.emplace_back(std::move(newObject));
 
-    return newObject;
+    return static_cast<T*>(mObjects.back().get());
 }

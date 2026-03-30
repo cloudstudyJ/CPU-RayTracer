@@ -5,6 +5,8 @@
 #include "material.hpp"
 #include "ray.hpp"
 
+#include <memory>
+
 class Object {
     public:
         virtual ~Object() noexcept = default;
@@ -16,15 +18,15 @@ class Object {
         AABB& aabb() noexcept { return mAABB; }
         const AABB& aabb() const noexcept { return mAABB; }
 
-        const Material* material() const noexcept { return mMaterial; }
+        const Material* material() const noexcept { return mMaterial.get(); }
 
     protected:
         Object() noexcept = default;
-        Object(const Vec3& pos, const Material* material) noexcept: mPos(pos), mMaterial(material) {}
+        Object(const Vec3& pos, std::shared_ptr<const Material> material) noexcept: mPos(pos), mMaterial(material) {}
 
     protected:
         Vec3 mPos;
 
         AABB mAABB;
-        const Material* mMaterial;
+        std::shared_ptr<const Material> mMaterial;
 };

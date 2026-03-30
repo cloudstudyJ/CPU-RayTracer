@@ -17,5 +17,5 @@ namespace Utility {
     }
 
     template <typename T>
-    inline constexpr bool isInRange(const T& val, const T& min, const T& max) noexcept { return (val >= min && val <= max); }
+    inline constexpr bool isInClosedRange(const T& val, const T& min, const T& max) noexcept { return (val >= min && val <= max); }
 }

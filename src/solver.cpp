@@ -44,7 +44,7 @@ HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, 
         .v                   = Math::arccos(-outN.y) / Math::PI,
         .hitPoint            = hitP,
         .normal              = (isRayOppositeNormal ? outN : -outN),
-        .material            = sphere.material()
+        .object              = &sphere
     };
 
     return hitResult;
@@ -83,7 +83,7 @@ HitResult Solver::hitTest(const Ray& ray, const Quad& quad, const f32 tMin, cons
         .v                   = b,
         .hitPoint            = hitP,
         .normal              = (isRayOppositeNormal ? outN : -outN),
-        .material            = quad.material()
+        .object              = &quad
     };
 
     return hitResult;
@@ -97,7 +97,7 @@ bool Solver::isIntersect(const Ray& ray, const AABB& aabb, f32 tMin, f32 tMax) {
         f32 axisMax = aabb.max.data[axis];
 
         if ((rayD * rayD) < 1.0E-12f) {
-            if (!Utility::isInRange(rayO, axisMin, axisMax))
+            if (!Utility::isInClosedRange(rayO, axisMin, axisMax))
                 return false;
 
             continue;

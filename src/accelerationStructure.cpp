@@ -26,7 +26,36 @@ namespace {
     }
 }
 
-AccelerationStructure::~AccelerationStructure() noexcept {
+AccelerationStructure::AccelerationStructure(AccelerationStructure&& other) noexcept
+    : mRoot(std::move(other.mRoot)) { other.mRoot = {}; }
+AccelerationStructure::~AccelerationStructure() noexcept { clear(); }
+
+AccelerationStructure& AccelerationStructure::operator=(AccelerationStructure&& other) noexcept {
+    if (this == &other)
+        return *this;
+
+    clear();
+
+    mRoot       = std::move(other.mRoot);
+    other.mRoot = {};
+
+    return *this;
+}
+
+// [from, to)
+void AccelerationStructure::build(const std::vector<std::unique_ptr<Object>>& objects) {
+    std::vector<Object*> objRefs;
+    objRefs.reserve(objects.size());
+
+    for (const auto& obj: objects)
+        objRefs.emplace_back(obj.get());
+
+    mRoot = build(objRefs, 0, static_cast<u32>(objects.size()));
+}
+void AccelerationStructure::clear() noexcept {
+    if (!mRoot)
+        return;
+
     Node* stk[128];
 
     u32 ptr{};
@@ -40,12 +69,8 @@ AccelerationStructure::~AccelerationStructure() noexcept {
 
         delete node;
     }
-}
 
-// [from, to)
-void AccelerationStructure::build(const std::vector<Object*>& objects) {
-    std::vector<Object*> objRefs = objects;
-    mRoot = build(objRefs, 0, static_cast<u32>(objects.size()));
+    mRoot = {};
 }
 
 HitResult AccelerationStructure::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) noexcept {
