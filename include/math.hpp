@@ -4,6 +4,7 @@
 
 namespace Math {
     static constexpr f32 PI{3.141'592f};
+    static constexpr f32 INV_PI{1 / PI};
 
     inline constexpr f32 toRad(const f32 degree) noexcept { return (PI / 180) * degree; }
     inline constexpr f32 toDegree(const f32 rad) noexcept { return (180 / PI) * rad; }

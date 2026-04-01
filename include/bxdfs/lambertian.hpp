@@ -4,5 +4,8 @@
 
 class Lambertian: public BxDF {
     public:
-        Vec3 sample(const Vec3& wi, const HitResult& surfaceInfo) const noexcept override;
+        f32 eval() const noexcept override;
+        f32 pdf(const Vec3& wi, const Vec3& n) const noexcept override;
+
+        SampleResult sample(const Vec3& wi, const HitResult& surfaceInfo) const noexcept override;
 };

@@ -7,7 +7,10 @@ class Dielectric: public BxDF {
         Dielectric() noexcept: mRefractiveIndex(1.0f) {}
         Dielectric(const f32 refractiveIndex): mRefractiveIndex(refractiveIndex) {}
 
-        Vec3 sample(const Vec3& wi, const HitResult& surfaceInfo) const noexcept override;
+        f32 eval() const noexcept override;
+        f32 pdf(const Vec3& wi, const Vec3& n) const noexcept override;
+
+        SampleResult sample(const Vec3& wi, const HitResult& surfaceInfo) const noexcept override;
 
     private:
         f32 mRefractiveIndex;

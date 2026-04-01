@@ -27,7 +27,6 @@ RenderSettings renderSettings = {
     .maxRayBounces   = 8
 };
 
-constexpr f32 INV_PI = 1 / Math::PI;
 constexpr f32 TWO_PI = Math::PI * 2;
 constexpr f32 INV_TWO_PI = 1 / TWO_PI;
 
@@ -42,9 +41,9 @@ World world;
 
 Vec3 gammaCorrection(const Vec3& linearColor) {
     return {
-        ((linearColor.x > 0.0f) ? Math::sqrt(linearColor.x) : 0.0f),
-        ((linearColor.y > 0.0f) ? Math::sqrt(linearColor.y) : 0.0f),
-        ((linearColor.z > 0.0f) ? Math::sqrt(linearColor.z) : 0.0f)
+        ((linearColor.x > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.x)) : 0.0f),
+        ((linearColor.y > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.y)) : 0.0f),
+        ((linearColor.z > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.z)) : 0.0f)
     };
 }
 
@@ -92,7 +91,7 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, u16 depth = 1) {
     }
 
     if (bxdf) {
-        Vec3 f = material->texture->color(hitResult.u, hitResult.v) * INV_PI;
+        Vec3 f = material->texture->color(hitResult.u, hitResult.v) * bxdf->eval();
 
         // Direct Lighting
         for (const auto& [light, info]: world.getLights()) {
@@ -120,14 +119,32 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, u16 depth = 1) {
         }
 
         // Indirect Lighting
-        Vec3 wi    = bxdf->sample(ray.direction, hitResult);
+        SampleResult sampleResult = bxdf->sample(ray.direction, hitResult);
+
+        Vec3 wi    = sampleResult.w;
         Ray  wiRay = {hitResult.hitPoint, wi};
 
         HitResult wiHitResult = world.traceRay(wiRay, RAY_T_MIN, INF_F32);
-        Vec3      L_i         = (wiHitResult.isHit ? hitShader(wiRay, wiHitResult, depth + 1) : missShader());
-        f32       cosTheta    = Vec3::dot(hitResult.normal, wi);
-        f32       pdf         = INV_TWO_PI;
-                  L_indirect  = (f * L_i * cosTheta) / pdf;
+
+        Vec3 L_i;
+        bool hitLight = false;
+
+        if (wiHitResult.isHit) {
+            for (const auto& [light, info]: world.getLights()) {
+                if (wiHitResult.object == light) {
+                    hitLight = true;
+                    break;
+                }
+            }
+
+            L_i = (hitLight ? Vec3{} : hitShader(wiRay, wiHitResult, depth + 1));
+        }
+        else
+            L_i = missShader();
+
+        f32 cosTheta   = Utility::max(0.0f, Vec3::dot(hitResult.normal, wi));
+        f32 pdf        = sampleResult.pdf;
+            L_indirect = (f * L_i * cosTheta) / pdf;
     }
 
     return L_e + L_direct + L_indirect;
@@ -205,6 +222,10 @@ int main() {
                             }
                         }
                         color *= SQRT_SPP_SCALE;
+
+                        if (color.r != color.r) color.r = 0.0f;
+                        if (color.g != color.g) color.g = 0.0f;
+                        if (color.b != color.b) color.b = 0.0f;
 
                         u32 idx = (y * renderSettings.imgWidth + x);
 

@@ -15,4 +15,5 @@ namespace Random {
 
     Vec3 uniformSphere();
     Vec3 uniformHemisphere();
+    Vec3 cosWeightedHemisphere();
 }

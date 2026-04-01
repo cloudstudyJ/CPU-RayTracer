@@ -29,4 +29,16 @@ namespace Random {
 
     Vec3 uniformSphere() { return uniformSphereRange(-1.0f, 1.0f); }
     Vec3 uniformHemisphere() { return uniformSphereRange(0.0f, 1.0f); }
+    Vec3 cosWeightedHemisphere() {
+        const f32 phi       = 2 * Math::PI * uniform();
+        const f32 sinTheta2 = uniform();
+        const f32 sinTheta  = Math::sqrt(Utility::max(0.0f, sinTheta2));
+        const f32 cosTheta  = Math::sqrt(Utility::max(0.0f, 1 - sinTheta2));
+
+        return {
+            sinTheta * Math::cos(phi),
+            sinTheta * Math::sin(phi),
+            cosTheta
+        };
+    }
 }
