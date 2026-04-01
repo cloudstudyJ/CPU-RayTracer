@@ -4,15 +4,15 @@
 Sphere::Sphere() noexcept
     : Object(), mRadius(1.0f) {
     mAABB = {
-        mPos - mRadius,
-        mPos + mRadius
+        mTransform.position - mRadius,
+        mTransform.position + mRadius
     };
 }
-Sphere::Sphere(const Vec3& pos, const f32 r, std::shared_ptr<const Material> material) noexcept
-    : Object(pos, material), mRadius(r) {
+Sphere::Sphere(const Transform& transform, const f32 r, std::shared_ptr<const Material> material) noexcept
+    : Object(transform, material), mRadius(r) {
     mAABB = {
-        mPos - mRadius,
-        mPos + mRadius
+        mTransform.position - mRadius,
+        mTransform.position + mRadius
     };
 }
 

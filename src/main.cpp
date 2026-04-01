@@ -9,6 +9,7 @@
 #include "vec2.hpp"
 #include "worldLoader.hpp"
 #include "worldBuilder.hpp"
+#include "ray.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -63,7 +64,7 @@ LightSample sampleQuad(const Quad& quad) {
     f32  a = n.length();
 
     return {
-        .p   = quad.pos() + (edgeU * u) + (edgeV * v),
+        .p   = quad.transform().position + (edgeU * u) + (edgeV * v),
         .n   = n / a,
         .pdf = 1 / a
     };

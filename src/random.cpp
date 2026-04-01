@@ -1,7 +1,23 @@
 #include "random.hpp"
 #include "math.hpp"
+#include "utility.hpp"
 
 #include <random>
+
+namespace {
+    // [-1, 1]
+    Vec3 uniformSphereRange(const f32 zMin, const f32 zMax) {
+        const f32 phi = 2 * Math::PI * Random::uniform();
+        const f32 z   = zMin + (zMax - zMin) * Random::uniform();
+        const f32 a   = Math::sqrt(Utility::max(0.0f, 1 - z * z));
+
+        return {
+            a * Math::cos(phi),
+            a * Math::sin(phi),
+            z
+        };
+    }
+}
 
 namespace Random {
     f32 uniform() {
@@ -11,20 +27,6 @@ namespace Random {
         return dis(gen);
     }
 
-    Vec3 uniformSphere() {
-        const f32 phi = 2 * Math::PI * uniform();
-        const f32 z   = 1 - 2 * uniform();
-        const f32 a   = Math::sqrt(1 - z * z);
-
-        return {
-            a * Math::cos(phi),
-            a * Math::sin(phi),
-            z
-        };
-    }
-    Vec3 uniformHemisphere(const Vec3& n) {
-        Vec3 sample = uniformSphere();
-
-        return ((Vec3::dot(n, sample) < 0.0f) ? -sample : sample);
-    }
+    Vec3 uniformSphere() { return uniformSphereRange(-1.0f, 1.0f); }
+    Vec3 uniformHemisphere() { return uniformSphereRange(0.0f, 1.0f); }
 }

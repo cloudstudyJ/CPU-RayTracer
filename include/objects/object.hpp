@@ -3,9 +3,12 @@
 #include "hitResult.hpp"
 #include "aabb.hpp"
 #include "material.hpp"
-#include "ray.hpp"
+#include "components/transform.hpp"
 
 #include <memory>
+
+// fwd
+struct Ray;
 
 class Object {
     public:
@@ -13,7 +16,7 @@ class Object {
 
         virtual HitResult hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const = 0;
 
-        Vec3 pos() const noexcept { return mPos; }
+        Transform transform() const noexcept { return mTransform; }
 
         AABB& aabb() noexcept { return mAABB; }
         const AABB& aabb() const noexcept { return mAABB; }
@@ -22,10 +25,10 @@ class Object {
 
     protected:
         Object() noexcept = default;
-        Object(const Vec3& pos, std::shared_ptr<const Material> material) noexcept: mPos(pos), mMaterial(material) {}
+        Object(const Transform& transform, std::shared_ptr<const Material> material) noexcept: mTransform(transform), mMaterial(material) {}
 
     protected:
-        Vec3 mPos;
+        Transform mTransform;
 
         AABB mAABB;
         std::shared_ptr<const Material> mMaterial;

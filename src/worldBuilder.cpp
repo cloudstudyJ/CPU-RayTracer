@@ -1,5 +1,5 @@
 #include "worldBuilder.hpp"
-#include "worldLoader.hpp"
+#include "worldTypes.hpp"
 #include "objects.hpp"
 #include "bxdfs.hpp"
 #include "solidTexture.hpp"
@@ -24,8 +24,8 @@ namespace WorldBuilder {
             material = ctx.materialTable.find(desc.materialName)->second;
 
         Object* newObject = {};
-        if      (desc.geometryType == GeometryType::Sphere) newObject = ctx.world.addObject<Sphere>(desc.transform.position, std::get<SphereDesc>(geoData).radius, material);
-        else if (desc.geometryType == GeometryType::Quad  ) newObject = ctx.world.addObject<Quad>(desc.transform.position, std::get<QuadDesc>(geoData).u, std::get<QuadDesc>(geoData).v, material);
+        if      (desc.geometryType == GeometryType::Sphere) newObject = ctx.world.addObject<Sphere>(desc.transform, std::get<SphereDesc>(geoData).radius, material);
+        else if (desc.geometryType == GeometryType::Quad  ) newObject = ctx.world.addObject<Quad>(desc.transform, std::get<QuadDesc>(geoData).u, std::get<QuadDesc>(geoData).v, material);
         else if (desc.geometryType == GeometryType::Box   ) newObject = ctx.world.addObject<Box>(std::get<BoxDesc>(geoData).p1, std::get<BoxDesc>(geoData).p2, material);
 
         ctx.objectTable.try_emplace(desc.name, newObject);

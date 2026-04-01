@@ -7,7 +7,7 @@
 #include "ray.hpp"
 
 HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, const f32 tMax) {
-    Vec3 spherePos = sphere.pos();
+    Vec3 spherePos = sphere.transform().position;
     f32 radius = sphere.radius();
 
     Vec3 ac = spherePos - ray.origin;
@@ -50,7 +50,7 @@ HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, 
     return hitResult;
 }
 HitResult Solver::hitTest(const Ray& ray, const Quad& quad, const f32 tMin, const f32 tMax) {
-    Vec3 pos = quad.pos();
+    Vec3 pos = quad.transform().position;
     Vec3 u   = quad.edgeU();
     Vec3 v   = quad.edgeV();
     Vec3 n   = Vec3::cross(u, v);
