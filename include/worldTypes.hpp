@@ -6,14 +6,6 @@
 #include <variant>
 #include <vector>
 
-struct RenderSettings {
-    u32 imgWidth {};
-    u32 imgHeight{};
-
-    u32 samplesPerPixel{};
-    u32 maxRayBounces  {};
-};
-
 enum class BxDFType: byte {
     None       = 0x00,
     Lambertian = 0x01,

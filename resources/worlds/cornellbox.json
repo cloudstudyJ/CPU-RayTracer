@@ -1,12 +1,4 @@
 {
-    "Renderer": {
-        "Resolution": [1200, 1200],
-        "Sampling"  : {
-            "SamplesPerPixel": 3000,
-            "MaxRayBounces"  : 8
-        }
-    },
-
     "Materials": [
         {
             "Name"   : "Wall_Green",
@@ -44,8 +36,8 @@
             "Name"     : "CornellBox_Wall_Left",
             "Geometry" : {
                 "Type": "Quad",
-                "U"   : [0.0, 555.0, 0.0],
-                "V"   : [0.0, 0.0, 555.0]
+                "U"   : [0.0, 555.0,   0.0],
+                "V"   : [0.0,   0.0, 555.0]
             },
             "Transform": {
                 "Position": [555.0, 0.0, 0.0],
@@ -58,8 +50,8 @@
             "Name"     : "CornellBox_Wall_Right",
             "Geometry" : {
                 "Type": "Quad",
-                "U"   : [0.0, 555.0, 0.0],
-                "V"   : [0.0, 0.0, 555.0]
+                "U"   : [0.0, 555.0,   0.0],
+                "V"   : [0.0,   0.0, 555.0]
             },
             "Transform": {
                 "Position": [0.0, 0.0, 0.0],
@@ -72,8 +64,8 @@
             "Name"     : "CornellBox_Wall_Floor",
             "Geometry" : {
                 "Type": "Quad",
-                "U"   : [555.0, 0.0, 0.0],
-                "V"   : [0.0, 0.0, 555.0]
+                "U"   : [555.0, 0.0,   0.0],
+                "V"   : [  0.0, 0.0, 555.0]
             },
             "Transform": {
                 "Position": [0.0, 0.0, 0.0],
@@ -86,8 +78,8 @@
             "Name"     : "CornellBox_Wall_Ceil",
             "Geometry" : {
                 "Type": "Quad",
-                "U"   : [-555.0, 0.0, 0.0],
-                "V"   : [0.0, 0.0, -555.0]
+                "U"   : [-555.0, 0.0,    0.0],
+                "V"   : [   0.0, 0.0, -555.0]
             },
             "Transform": {
                 "Position": [555.0, 555.0, 555.0],
@@ -100,8 +92,8 @@
             "Name"     : "CornellBox_Wall_Back",
             "Geometry" : {
                 "Type": "Quad",
-                "U"   : [555.0, 0.0, 0.0],
-                "V"   : [0.0, 555.0, 0.0]
+                "U"   : [555.0,   0.0, 0.0],
+                "V"   : [  0.0, 555.0, 0.0]
             },
             "Transform": {
                 "Position": [0.0, 0.0, 555.0],
@@ -114,13 +106,13 @@
             "Name"     : "LightQuad1",
             "Geometry" : {
                 "Type": "Quad",
-                "U"   : [-130.0, 0.0, 0.0],
-                "V"   : [0.0, 0.0, -105.0]
+                "U"   : [-130.0, 0.0,    0.0],
+                "V"   : [   0.0, 0.0, -105.0]
             },
             "Transform": {
                 "Position": [343.0, 554.0, 332.0],
-                "Rotation": [0.0, 0.0, 0.0],
-                "Scale"   : [1.0, 1.0, 1.0]
+                "Rotation": [  0.0,   0.0,   0.0],
+                "Scale"   : [  1.0,   1.0,   1.0]
             }
         },
         {

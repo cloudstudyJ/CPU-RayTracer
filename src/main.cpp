@@ -7,9 +7,11 @@
 #include "objects.hpp"
 #include "bxdfs.hpp"
 #include "vec2.hpp"
-#include "worldLoader.hpp"
 #include "worldBuilder.hpp"
 #include "ray.hpp"
+#include "jsonParser.hpp"
+
+#include "rapidjson/document.h"
 
 #include <iostream>
 #include <fstream>
@@ -18,14 +20,16 @@
 #include <thread>
 #include <atomic>
 
-// Todo: parse this
-RenderSettings renderSettings = {
-    .imgWidth  = 600,
-    .imgHeight = 600,
+struct RenderSettings {
+    u32 imgWidth {};
+    u32 imgHeight{};
+    f32 aspectRatio{};
 
-    .samplesPerPixel = 200,
-    .maxRayBounces   = 8
-};
+    u32 samplesPerPixel{};
+    u32 maxRayBounces  {};
+
+    u32 threads{};
+} renderSettings;
 
 constexpr f32 TWO_PI = Math::PI * 2;
 constexpr f32 INV_TWO_PI = 1 / TWO_PI;
@@ -38,6 +42,27 @@ std::vector<Vec3> framebuffer;
 std::vector<byte> snapshot;
 
 World world;
+
+RenderSettings getRenderSettings(const char* file) {
+    jsonDocument doc = JsonParser::getDocument(file);
+
+    const jsonValue& renderer = doc["Renderer"];
+    const jsonValue& sampling = renderer["Sampling"];
+
+    u32 w = JsonParser::toU32(renderer["Resolution"][0]);
+    u32 h = JsonParser::toU32(renderer["Resolution"][1]);
+
+    return {
+        .imgWidth    = w,
+        .imgHeight   = h,
+        .aspectRatio = static_cast<f32>(w) / h,
+
+        .samplesPerPixel = JsonParser::toU32(sampling["SamplesPerPixel"]),
+        .maxRayBounces   = JsonParser::toU32(sampling["MaxRayBounces"]),
+
+        .threads = Utility::max(1u, std::thread::hardware_concurrency())
+    };
+}
 
 Vec3 gammaCorrection(const Vec3& linearColor) {
     return {
@@ -151,17 +176,11 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, u16 depth = 1) {
 }
 
 int main() {
-    world = std::move(WorldBuilder::buildWorld(WorldLoader::parseWorld("../../resources/worlds/cornellbox.json")));
+    renderSettings = std::move(getRenderSettings("../../renderConfig.json"));
+    world = std::move(WorldBuilder::buildWorld("../../resources/worlds/cornellbox.json"));
 
     framebuffer.resize(renderSettings.imgWidth * renderSettings.imgHeight);
     snapshot.resize(renderSettings.imgWidth * renderSettings.imgHeight * 3);
-
-    const f32 ASPECT_RATIO = static_cast<f32>(renderSettings.imgWidth) / renderSettings.imgHeight;
-    const f32 SAMPLE_SCALE = 1.0f / renderSettings.samplesPerPixel;
-
-    const f32 SQRT_SPP       = static_cast<u16>(Math::sqrt(renderSettings.samplesPerPixel));
-    const f32 INV_SQRT_SPP   = 1.0f / SQRT_SPP;
-    const f32 SQRT_SPP_SCALE = 1.0f / (SQRT_SPP * SQRT_SPP);
 
     Camera camera = {
         .yfov = 40.0f,
@@ -178,7 +197,7 @@ int main() {
 
     Vec2 viewport;
     viewport.y = 2 * focalLength * Math::tan(Math::toRad(camera.yfov / 2));
-    viewport.x = viewport.y * ASPECT_RATIO;
+    viewport.x = viewport.y * renderSettings.aspectRatio;
 
     Vec3 viewportU = x * viewport.x;
     Vec3 viewportV = y * -viewport.y;
@@ -187,10 +206,12 @@ int main() {
     Vec3 viewportdV = viewportV / renderSettings.imgHeight;
     Vec3 viewportLT = camera.pos - (viewportU / 2.0f) - (viewportV / 2.0f) - nz;
 
-    const u32 THREADS = Utility::max(1u, std::thread::hardware_concurrency());
+    const f32 SQRT_SPP       = static_cast<u16>(Math::sqrt(renderSettings.samplesPerPixel));
+    const f32 INV_SQRT_SPP   = 1 / SQRT_SPP;
+    const f32 SQRT_SPP_SCALE = 1 / (SQRT_SPP * SQRT_SPP);
 
     std::vector<std::thread> threads;
-    threads.reserve(THREADS);
+    threads.reserve(renderSettings.threads);
 
     std::chrono::steady_clock::time_point start, end;
     start = std::chrono::steady_clock::now();
@@ -243,7 +264,7 @@ int main() {
             }
         };
 
-        for (u16 i = 0; i < THREADS; ++i)
+        for (u16 i = 0; i < renderSettings.threads; ++i)
             threads.emplace_back(render);
 
         for (auto& thread: threads)
@@ -258,7 +279,7 @@ int main() {
     writer << "255\n";
     writer.write(reinterpret_cast<const char*>(snapshot.data()), snapshot.size());
 
-    std::cout << "Threads: " << THREADS << '\n';
+    std::cout << "Threads: " << renderSettings.threads << '\n';
     std::cout << "Resolution: " << renderSettings.imgWidth << 'x' << renderSettings.imgHeight << '\n';
     std::cout << "Max Ray Bounces: " << renderSettings.maxRayBounces << '\n';
     std::cout << "Samples Per Pixel: " << renderSettings.samplesPerPixel << '\n';

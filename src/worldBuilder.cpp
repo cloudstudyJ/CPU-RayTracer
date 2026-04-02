@@ -1,8 +1,19 @@
 #include "worldBuilder.hpp"
-#include "worldTypes.hpp"
+#include "worldLoader.hpp"
 #include "objects.hpp"
 #include "bxdfs.hpp"
 #include "solidTexture.hpp"
+
+#include <unordered_map>
+#include <string>
+#include <memory>
+
+struct BuildContext {
+    World& world;
+
+    std::unordered_map<std::string, std::shared_ptr<Material>> materialTable;
+    std::unordered_map<std::string, Object*>                   objectTable;
+};
 
 namespace WorldBuilder {
     void buildMaterial(BuildContext& ctx, const MaterialDesc& desc) {
@@ -38,13 +49,14 @@ namespace WorldBuilder {
         ctx.world.addLight(it->second, {desc.color, desc.intensity});
     }
 
-    World buildWorld(const WorldDesc& data) {
-        World world;
+    World buildWorld(const char* file) {
+        WorldDesc desc = WorldLoader::parseWorld(file);
 
+        World world;
         BuildContext ctx = {world};
-        for (const auto& material: data.materials) buildMaterial(ctx, material);
-        for (const auto& object  : data.objects  ) buildObject(ctx, object);
-        for (const auto& light   : data.lights   ) buildLight(ctx, light);
+        for (const auto& material: desc.materials) buildMaterial(ctx, material);
+        for (const auto& object  : desc.objects  ) buildObject(ctx, object);
+        for (const auto& light   : desc.lights   ) buildLight(ctx, light);
         world.buildAccelerationStructure();
 
         return world;
