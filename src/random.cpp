@@ -1,21 +1,17 @@
 #include "random.hpp"
-#include "math.hpp"
+#include "math/math.hpp"
 #include "utility.hpp"
 
 #include <random>
 
 namespace {
     // [-1, 1]
-    Vec3 uniformSphereRange(const f32 zMin, const f32 zMax) {
+    Vec3 uniformSphereRange(const f32 zMin, const f32 zMax) noexcept {
         const f32 phi = 2 * Math::PI * Random::uniform();
         const f32 z   = zMin + (zMax - zMin) * Random::uniform();
         const f32 a   = Math::sqrt(Utility::max(0.0f, 1 - z * z));
 
-        return {
-            a * Math::cos(phi),
-            a * Math::sin(phi),
-            z
-        };
+        return { .data = { a * Math::cos(phi), a * Math::sin(phi), z } };
     }
 }
 
@@ -27,18 +23,18 @@ namespace Random {
         return dis(gen);
     }
 
-    Vec3 uniformSphere() { return uniformSphereRange(-1.0f, 1.0f); }
-    Vec3 uniformHemisphere() { return uniformSphereRange(0.0f, 1.0f); }
+    Vec3 uniformSphere() {
+        return uniformSphereRange(-1.0f, 1.0f);
+    }
+    Vec3 uniformHemisphere() {
+        return uniformSphereRange(0.0f, 1.0f);
+    }
     Vec3 cosWeightedHemisphere() {
-        const f32 phi       = 2 * Math::PI * uniform();
-        const f32 sinTheta2 = uniform();
-        const f32 sinTheta  = Math::sqrt(Utility::max(0.0f, sinTheta2));
-        const f32 cosTheta  = Math::sqrt(Utility::max(0.0f, 1 - sinTheta2));
+        const f32 phi   = 2 * Math::PI * uniform();
+        const f32 sinSQ = uniform();
+        const f32 sin   = Math::sqrt(Utility::max(0.0f, sinSQ));
+        const f32 cos   = Math::sqrt(Utility::max(0.0f, 1 - sinSQ));
 
-        return {
-            sinTheta * Math::cos(phi),
-            sinTheta * Math::sin(phi),
-            cosTheta
-        };
+        return { .data = { sin * Math::cos(phi), sin * Math::sin(phi), cos } };
     }
 }

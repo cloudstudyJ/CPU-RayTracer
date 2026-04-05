@@ -6,8 +6,8 @@ namespace Math {
     static constexpr f32 PI{3.141'592f};
     static constexpr f32 INV_PI{1 / PI};
 
-    inline constexpr f32 toRad(const f32 degree) noexcept { return (PI / 180) * degree; }
-    inline constexpr f32 toDegree(const f32 rad) noexcept { return (180 / PI) * rad; }
+    constexpr f32 toRad(const f32 degree) noexcept;
+    constexpr f32 toDegree(const f32 rad) noexcept;
 
     f32 abs(const f32 val) noexcept;
 
@@ -20,4 +20,11 @@ namespace Math {
 
     f32 arccos(const f32 val) noexcept;
     f32 arctan2(const f32 y, const f32 x) noexcept;
+}
+
+inline constexpr f32 Math::toRad(const f32 degree) noexcept {
+    return (PI / 180) * degree;
+}
+inline constexpr f32 Math::toDegree(const f32 rad) noexcept {
+    return (180 / PI) * rad;
 }

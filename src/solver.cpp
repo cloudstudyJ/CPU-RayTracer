@@ -3,7 +3,7 @@
 #include "objects/sphere.hpp"
 #include "objects/quad.hpp"
 #include "aabb.hpp"
-#include "math.hpp"
+#include "math/math.hpp"
 #include "ray.hpp"
 
 HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, const f32 tMax) {
@@ -72,7 +72,7 @@ HitResult Solver::hitTest(const Ray& ray, const Quad& quad, const f32 tMin, cons
     if ((a < 0.0f) || (a > 1.0f) || (b < 0.0f) || (b > 1.0f))
         return {};
 
-    Vec3 outN = n.normalize();
+    Vec3 outN = n.normalized();
     bool isRayOppositeNormal = (Vec3::dot(ray.direction, outN) < 0.0f);
 
     HitResult hitResult {

@@ -1,12 +1,12 @@
 #include "camera.hpp"
-#include "math.hpp"
+#include "math/math.hpp"
 #include "utility.hpp"
 #include "random.hpp"
 #include "material.hpp"
 #include "solidTexture.hpp"
 #include "objects.hpp"
 #include "bxdfs.hpp"
-#include "vec2.hpp"
+#include "math/vec2.hpp"
 #include "worldBuilder.hpp"
 #include "ray.hpp"
 #include "jsonParser.hpp"
@@ -66,9 +66,11 @@ RenderSettings getRenderSettings(const char* file) {
 
 Vec3 gammaCorrection(const Vec3& linearColor) {
     return {
-        ((linearColor.x > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.x)) : 0.0f),
-        ((linearColor.y > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.y)) : 0.0f),
-        ((linearColor.z > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.z)) : 0.0f)
+        .data = {
+            ((linearColor.x > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.x)) : 0.0f),
+            ((linearColor.y > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.y)) : 0.0f),
+            ((linearColor.z > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.z)) : 0.0f)
+        }
     };
 }
 
@@ -95,7 +97,9 @@ LightSample sampleQuad(const Quad& quad) {
 }
 
 // Black Backround
-Vec3 missShader() { return COLOR_BLACK; }
+Vec3 missShader() {
+    return COLOR_BLACK;
+}
 Vec3 hitShader(const Ray& ray, const HitResult& hitResult, u16 depth = 1) {
     if (depth > renderSettings.maxRayBounces)
         return {};
@@ -183,16 +187,17 @@ int main() {
     snapshot.resize(renderSettings.imgWidth * renderSettings.imgHeight * 3);
 
     Camera camera = {
-        .yfov = 40.0f,
         .pos  = {278.0f, 278.0f, -800.0f},
-        .look = {278.0f, 278.0f, 0.0f}
+        .look = {278.0f, 278.0f, 0.0f},
+
+        .yfov = 40.0f
     };
 
     Vec3 nz = camera.pos - camera.look;
     f32 focalLength = nz.length();
 
-    Vec3 z = nz.normalize();
-    Vec3 x = Vec3::cross(WORLD_Y, z).normalize();
+    Vec3 z = nz.normalized();
+    Vec3 x = Vec3::cross(WORLD_Y, z).normalized();
     Vec3 y = Vec3::cross(z, x);
 
     Vec2 viewport;

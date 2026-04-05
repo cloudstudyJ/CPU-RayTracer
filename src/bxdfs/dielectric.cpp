@@ -18,7 +18,7 @@ f32 Dielectric::eval() const noexcept { return 1.0f; }
 f32 Dielectric::pdf(const Vec3& wi, const Vec3& n) const noexcept { return 1.0f; }
 
 SampleResult Dielectric::sample(const Vec3& wi, const HitResult& surfaceInfo) const noexcept {
-    Vec3 in = wi.normalize();
+    Vec3 in = wi.normalized();
     f32 inCos = Vec3::dot(-in, surfaceInfo.normal);
     f32 inSin = Math::sqrt(1 - inCos * inCos);
     f32 eta   = (surfaceInfo.isRayOppositeNormal ? (1 / mRefractiveIndex) : mRefractiveIndex);
