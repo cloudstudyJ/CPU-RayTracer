@@ -17,9 +17,9 @@ namespace {
         return TextureType::Unknown;
     }
     GeometryType toGeometryType(const std::string& str) {
-        if      (str == "Sphere") return GeometryType::Sphere;
-        else if (str == "Quad"  ) return GeometryType::Quad;
-        else if (str == "Box"   ) return GeometryType::Box;
+        if      (str == "Sphere"   ) return GeometryType::Sphere;
+        else if (str == "Rectangle") return GeometryType::Rectangle;
+        else if (str == "Cube"     ) return GeometryType::Cube;
 
         return GeometryType::Unknown;
     }
@@ -80,9 +80,8 @@ namespace WorldLoader {
             .name         = toString(object["Name"])
         };
 
-        if      (geoType == GeometryType::Sphere) desc.geometryData = SphereDesc{toF32(geo["Radius"])};
-        else if (geoType == GeometryType::Quad  ) desc.geometryData = QuadDesc{toVec3(geo["U"]), toVec3(geo["V"])};
-        else if (geoType == GeometryType::Box   ) desc.geometryData = BoxDesc{toVec3(geo["P1"]), toVec3(geo["P2"])};
+        if (geoType == GeometryType::Sphere)
+            desc.geometryData = SphereDesc{toF32(geo["Radius"])};
 
         if (object.HasMember("Material"))
             desc.materialName = toString(object["Material"]);

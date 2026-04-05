@@ -34,138 +34,106 @@
     "Objects": [
         {
             "Name"     : "CornellBox_Left",
-            "Geometry" : {
-                "Type": "Quad",
-                "U"   : [0.0, 555.0,   0.0],
-                "V"   : [0.0,   0.0, 555.0]
-            },
+            "Geometry" : { "Type": "Rectangle" },
             "Transform": {
-                "Position": [555.0, 0.0, 0.0],
+                "Position": [-1.0, 0.0, 0.0],
                 "Rotation": {
                     "Axis" : [0.0, 1.0, 0.0],
                     "Angle": 90.0
                 },
-                "Scale"   : [  1.0, 1.0, 1.0]
+                "Scale"   : [2.0, 2.0, 1.0]
             },
             "Material": "Wall_Green"
         },
         {
             "Name"     : "CornellBox_Right",
-            "Geometry" : {
-                "Type": "Quad",
-                "U"   : [0.0, 555.0,   0.0],
-                "V"   : [0.0,   0.0, 555.0]
-            },
+            "Geometry" : { "Type": "Rectangle" },
             "Transform": {
-                "Position": [0.0, 0.0, 0.0],
+                "Position": [1.0, 0.0, 0.0],
                 "Rotation": {
                     "Axis" : [0.0, 1.0, 0.0],
                     "Angle": -90.0
                 },
-                "Scale"   : [1.0, 1.0, 1.0]
+                "Scale"   : [2.0, 2.0, 1.0]
             },
             "Material": "Wall_Red"
         },
         {
             "Name"     : "CornellBox_Ceil",
-            "Geometry" : {
-                "Type": "Quad",
-                "U"   : [-555.0, 0.0,    0.0],
-                "V"   : [   0.0, 0.0, -555.0]
-            },
+            "Geometry" : { "Type": "Rectangle" },
             "Transform": {
-                "Position": [555.0, 555.0, 555.0],
+                "Position": [0.0, 1.0, 0.0],
                 "Rotation": {
                     "Axis" : [1.0, 0.0, 0.0],
                     "Angle": 90.0
                 },
-                "Scale"   : [  1.0,   1.0,   1.0]
+                "Scale"   : [2.0, 2.0, 1.0]
             },
             "Material": "Wall_White"
         },
         {
             "Name"     : "CornellBox_Floor",
-            "Geometry" : {
-                "Type": "Quad",
-                "U"   : [555.0, 0.0,   0.0],
-                "V"   : [  0.0, 0.0, 555.0]
-            },
+            "Geometry" : { "Type": "Rectangle" },
             "Transform": {
-                "Position": [0.0, 0.0, 0.0],
+                "Position": [0.0, -1.0, 0.0],
                 "Rotation": {
                     "Axis" : [1.0, 0.0, 0.0],
                     "Angle": -90.0
                 },
-                "Scale"   : [1.0, 1.0, 1.0]
+                "Scale"   : [2.0, 2.0, 1.0]
             },
             "Material": "Wall_White"
         },
         {
             "Name"     : "CornellBox_Back",
-            "Geometry" : {
-                "Type": "Quad",
-                "U"   : [555.0,   0.0, 0.0],
-                "V"   : [  0.0, 555.0, 0.0]
-            },
+            "Geometry" : { "Type": "Rectangle" },
             "Transform": {
-                "Position": [0.0, 0.0, 555.0],
+                "Position": [0.0, 0.0, -1.0],
                 "Rotation": {
                     "Axis" : [0.0, 0.0, 0.0],
                     "Angle": 0.0
                 },
-                "Scale"   : [1.0, 1.0,   1.0]
+                "Scale"   : [2.0, 2.0, 1.0]
+            },
+            "Material": "Wall_White"
+        },
+        {
+            "Name"     : "Cube_Back",
+            "Geometry" : { "Type": "Cube" },
+            "Transform": {
+                "Position": [-0.25, -0.4, -0.28],
+                "Rotation": {
+                    "Axis" : [0.0, 1.0, 0.0],
+                    "Angle": 15.0
+                },
+                "Scale"   : [0.6, 1.2, 0.6]
+            },
+            "Material": "Wall_White"
+        },
+        {
+            "Name"     : "Cube_Front",
+            "Geometry" : { "Type": "Cube" },
+            "Transform": {
+                "Position": [0.25, -0.7, 0.5],
+                "Rotation": {
+                    "Axis" : [0.0, 1.0, 0.0],
+                    "Angle": -18.0
+                },
+                "Scale"   : [0.6, 0.6, 0.6]
             },
             "Material": "Wall_White"
         },
         {
             "Name"     : "CeilLight",
-            "Geometry" : {
-                "Type": "Quad",
-                "U"   : [-130.0, 0.0,    0.0],
-                "V"   : [   0.0, 0.0, -105.0]
-            },
+            "Geometry" : { "Type": "Rectangle" },
             "Transform": {
-                "Position": [343.0, 554.0, 332.0],
+                "Position": [0.0, 0.999, 0.0],
                 "Rotation": {
                     "Axis" : [1.0, 0.0, 0.0],
                     "Angle": 90.0
                 },
-                "Scale"   : [  1.0,   1.0,   1.0]
+                "Scale"   : [0.45, 0.45, 1.0]
             }
-        },
-        {
-            "Name"     : "Box1",
-            "Geometry" : {
-                "Type": "Box",
-                "P1"  : [130.0,   0.0,  65.0],
-                "P2"  : [295.0, 165.0, 230.0]
-            },
-            "Transform": {
-                "Position": [0.0, 0.5, 0.0],
-                "Rotation": {
-                    "Axis" : [0.0, 0.0, 0.0],
-                    "Angle": 0.0
-                },
-                "Scale"   : [1.0, 1.0, 1.0]
-            },
-            "Material": "Wall_White"
-        },
-        {
-            "Name"     : "Box2",
-            "Geometry" : {
-                "Type": "Box",
-                "P1"  : [265.0,   0.0, 295.0],
-                "P2"  : [430.0, 330.0, 460.0]
-            },
-            "Transform": {
-                "Position": [0.0, 0.5, 0.0],
-                "Rotation": {
-                    "Axis" : [0.0, 0.0, 0.0],
-                    "Angle": 0.0
-                },
-                "Scale"   : [1.0, 1.0, 1.0]
-            },
-            "Material": "Wall_White"
         }
     ],
     "Lights": [

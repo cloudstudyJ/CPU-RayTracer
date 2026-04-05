@@ -16,4 +16,6 @@ Sphere::Sphere(const Transform& transform, const f32 r, std::shared_ptr<const Ma
     };
 }
 
-HitResult Sphere::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const { return Solver::hitTest(ray, *this, tMin, tMax); }
+HitResult Sphere::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const {
+    return Solver::hitTest(ray, *this, tMin, tMax);
+}

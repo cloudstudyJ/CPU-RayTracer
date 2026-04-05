@@ -20,11 +20,11 @@ enum class TextureType: byte {
     Unknown = 0xFF
 };
 enum class GeometryType: byte {
-    None    = 0x00,
-    Sphere  = 0x01,
-    Quad    = 0x02,
-    Box     = 0x03,
-    Unknown = 0xFF
+    None      = 0x00,
+    Sphere    = 0x01,
+    Rectangle = 0x02,
+    Cube      = 0x03,
+    Unknown   = 0xFF
 };
 
 struct MetalDesc      { f32 roughness      {}; };
@@ -44,12 +44,10 @@ struct MaterialDesc {
 };
 
 struct SphereDesc { f32  radius{}; };
-struct QuadDesc   { Vec3 u ,  v;   };
-struct BoxDesc    { Vec3 p1, p2;   };
 struct ObjectDesc {
     GeometryType geometryType;
 
-    std::variant<SphereDesc, QuadDesc, BoxDesc> geometryData;
+    std::variant<SphereDesc> geometryData;
 
     Transform transform;
 

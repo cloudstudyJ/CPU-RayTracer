@@ -80,19 +80,19 @@ struct LightSample {
     f32  pdf{};
 };
 
-LightSample sampleQuad(const Quad& quad) {
-    const Vec3 edgeU = quad.edgeU();
-    const Vec3 edgeV = quad.edgeV();
+LightSample sampleRect(const Rectangle& rect) {
+    const Vec3 edgeU = rect.edgeU();
+    const Vec3 edgeV = rect.edgeV();
 
-    f32  u = Random::uniform();
-    f32  v = Random::uniform();
+    f32  u = Random::uniform(-0.5f, 0.5f);
+    f32  v = Random::uniform(-0.5f, 0.5f);
     Vec3 n = Vec3::cross(edgeU, edgeV);
     f32  a = n.length();
 
     return {
-        .p   = quad.transform().position + (edgeU * u) + (edgeV * v),
+        .p   = rect.transform().position + (edgeU * u) + (edgeV * v),
         .n   = n / a,
-        .pdf = 1 / a
+        .pdf = 1.0f / a
     };
 }
 
@@ -127,7 +127,7 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, u16 depth = 1) {
             if (hitObject == light)
                 continue;
 
-            LightSample lightSample = sampleQuad(*static_cast<Quad*>(light));
+            LightSample lightSample = sampleRect(*static_cast<Rectangle*>(light));
             Vec3        wiLight     = lightSample.p - hitResult.hitPoint;
             f32         r           = wiLight.length();
                         wiLight     = wiLight / r;
@@ -181,14 +181,14 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, u16 depth = 1) {
 
 int main() {
     renderSettings = std::move(getRenderSettings("../../renderConfig.json"));
-    world = std::move(WorldBuilder::buildWorld("../../resources/worlds/cornellbox.json"));
+    world = std::move(WorldBuilder::buildWorld("../../resources/worlds/cornellBox.json"));
 
     framebuffer.resize(renderSettings.imgWidth * renderSettings.imgHeight);
     snapshot.resize(renderSettings.imgWidth * renderSettings.imgHeight * 3);
 
     Camera camera = {
-        .pos  = { .data = { 278.0f, 278.0f, -800.0f } },
-        .look = { .data = { 278.0f, 278.0f,    0.0f } },
+        .pos  = { .data = { 0.0f, 0.0f, 3.9f } },
+        .look = { .data = { 0.0f, 0.0f, 0.0f } },
 
         .yfov = 40.0f
     };

@@ -29,15 +29,16 @@ namespace WorldBuilder {
     }
     void buildObject(BuildContext& ctx, const ObjectDesc& desc) {
         const auto& geoData = desc.geometryData;
+        const auto& geoType = desc.geometryType;
 
         std::shared_ptr<Material> material;
         if (!desc.materialName.empty() && ctx.materialTable.contains(desc.materialName))
             material = ctx.materialTable.find(desc.materialName)->second;
 
         Object* newObject = {};
-        if      (desc.geometryType == GeometryType::Sphere) newObject = ctx.world.addObject<Sphere>(desc.transform, std::get<SphereDesc>(geoData).radius, material);
-        else if (desc.geometryType == GeometryType::Quad  ) newObject = ctx.world.addObject<Quad>(desc.transform, std::get<QuadDesc>(geoData).u, std::get<QuadDesc>(geoData).v, material);
-        else if (desc.geometryType == GeometryType::Box   ) newObject = ctx.world.addObject<Box>(std::get<BoxDesc>(geoData).p1, std::get<BoxDesc>(geoData).p2, material);
+        if      (geoType == GeometryType::Sphere   ) newObject = ctx.world.addObject<Sphere>(desc.transform, std::get<SphereDesc>(geoData).radius, material);
+        else if (geoType == GeometryType::Rectangle) newObject = ctx.world.addObject<Rectangle>(desc.transform, material);
+        else if (geoType == GeometryType::Cube     ) newObject = ctx.world.addObject<Cube>(desc.transform, material);
 
         ctx.objectTable.try_emplace(desc.name, newObject);
     }

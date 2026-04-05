@@ -1,7 +1,7 @@
 #include "solver.hpp"
 #include "utility.hpp"
 #include "objects/sphere.hpp"
-#include "objects/quad.hpp"
+#include "objects/rectangle.hpp"
 #include "aabb.hpp"
 #include "math/math.hpp"
 #include "ray.hpp"
@@ -49,10 +49,10 @@ HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, 
 
     return hitResult;
 }
-HitResult Solver::hitTest(const Ray& ray, const Quad& quad, const f32 tMin, const f32 tMax) {
-    Vec3 pos = quad.transform().position;
-    Vec3 u   = quad.edgeU();
-    Vec3 v   = quad.edgeV();
+HitResult Solver::hitTest(const Ray& ray, const Rectangle& rect, const f32 tMin, const f32 tMax) {
+    Vec3 pos = rect.transform().position;
+    Vec3 u   = rect.edgeU();
+    Vec3 v   = rect.edgeV();
     Vec3 n   = Vec3::cross(u, v);
 
     f32 denom = Vec3::dot(n, ray.direction);
@@ -69,7 +69,7 @@ HitResult Solver::hitTest(const Ray& ray, const Quad& quad, const f32 tMin, cons
 
     f32 a = Vec3::dot(w, Vec3::cross(p, v));
     f32 b = Vec3::dot(w, Vec3::cross(u, p));
-    if ((a < 0.0f) || (a > 1.0f) || (b < 0.0f) || (b > 1.0f))
+    if ((a < -0.5f) || (a > 0.5f) || (b < -0.5f) || (b > 0.5f))
         return {};
 
     Vec3 outN = n.normalized();
@@ -79,11 +79,11 @@ HitResult Solver::hitTest(const Ray& ray, const Quad& quad, const f32 tMin, cons
         .isHit               = true,
         .isRayOppositeNormal = isRayOppositeNormal,
         .hitT                = t,
-        .u                   = a,
-        .v                   = b,
+        .u                   = a + 0.5f,
+        .v                   = b + 0.5f,
         .hitPoint            = hitP,
         .normal              = (isRayOppositeNormal ? outN : -outN),
-        .object              = &quad
+        .object              = &rect
     };
 
     return hitResult;
