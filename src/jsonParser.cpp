@@ -39,7 +39,4 @@ namespace JsonParser {
     f32 toF32(const jsonValue& v) { return v.GetFloat(); }
 
     std::string toString(const jsonValue& v) { return v.GetString(); }
-
-    Vec3      toVec3(const jsonValue& v)      { return {          toF32(v[0]),           toF32(v[1]),        toF32(v[2])}; }
-    Transform toTransform(const jsonValue& v) { return {toVec3(v["Position"]), toVec3(v["Rotation"]), toVec3(v["Scale"])}; }
 }

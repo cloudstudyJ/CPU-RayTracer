@@ -1,6 +1,6 @@
 #pragma once
 
-#include "components/transform.hpp"
+#include "types.hpp"
 
 #include <string>
 
@@ -30,7 +30,4 @@ namespace JsonParser {
     f32 toF32(const jsonValue& v);
 
     std::string toString(const jsonValue& v);
-
-    Vec3      toVec3(const jsonValue& v);
-    Transform toTransform(const jsonValue& v);
 }

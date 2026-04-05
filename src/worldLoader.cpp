@@ -23,6 +23,28 @@ namespace {
 
         return GeometryType::Unknown;
     }
+
+    Vec3 toVec3(const jsonValue& v) {
+        return {
+            .data = {
+                JsonParser::toF32(v[0]),
+                JsonParser::toF32(v[1]),
+                JsonParser::toF32(v[2])
+            }
+        };
+    }
+    Transform toTransform(const jsonValue& v) {
+        const jsonValue& rotation = v["Rotation"];
+
+        Vec3 axis  = toVec3(rotation["Axis"]);
+        f32  angle = JsonParser::toF32(rotation["Angle"]);  // degree
+
+        return {
+            .position = toVec3(v["Position"]),
+            .rotation = { .data = { axis.x, axis.y, axis.z, angle } },
+            .scale    = toVec3(v["Scale"])
+        };
+    }
 }
 
 namespace WorldLoader {
@@ -49,17 +71,18 @@ namespace WorldLoader {
     ObjectDesc parseObject(const jsonValue& object) {
         using namespace JsonParser;
 
-        const jsonValue& geo = object["Geometry"];
+        const jsonValue& geo     = object["Geometry"];
+        const auto&      geoType = toGeometryType(toString(geo["Type"]));
 
         ObjectDesc desc = {
-            .geometryType = toGeometryType(toString(geo["Type"])),
+            .geometryType = geoType,
             .transform    = toTransform(object["Transform"]),
             .name         = toString(object["Name"])
         };
 
-        if      (desc.geometryType == GeometryType::Sphere) desc.geometryData = SphereDesc{toF32(geo["Radius"])};
-        else if (desc.geometryType == GeometryType::Quad  ) desc.geometryData = QuadDesc{toVec3(geo["U"]), toVec3(geo["V"])};
-        else if (desc.geometryType == GeometryType::Box   ) desc.geometryData = BoxDesc{toVec3(geo["P1"]), toVec3(geo["P2"])};
+        if      (geoType == GeometryType::Sphere) desc.geometryData = SphereDesc{toF32(geo["Radius"])};
+        else if (geoType == GeometryType::Quad  ) desc.geometryData = QuadDesc{toVec3(geo["U"]), toVec3(geo["V"])};
+        else if (geoType == GeometryType::Box   ) desc.geometryData = BoxDesc{toVec3(geo["P1"]), toVec3(geo["P2"])};
 
         if (object.HasMember("Material"))
             desc.materialName = toString(object["Material"]);

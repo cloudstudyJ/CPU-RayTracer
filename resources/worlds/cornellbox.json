@@ -33,7 +33,7 @@
     ],
     "Objects": [
         {
-            "Name"     : "CornellBox_Wall_Left",
+            "Name"     : "CornellBox_Left",
             "Geometry" : {
                 "Type": "Quad",
                 "U"   : [0.0, 555.0,   0.0],
@@ -41,13 +41,16 @@
             },
             "Transform": {
                 "Position": [555.0, 0.0, 0.0],
-                "Rotation": [  0.0, 0.0, 0.0],
+                "Rotation": {
+                    "Axis" : [0.0, 1.0, 0.0],
+                    "Angle": 90.0
+                },
                 "Scale"   : [  1.0, 1.0, 1.0]
             },
             "Material": "Wall_Green"
         },
         {
-            "Name"     : "CornellBox_Wall_Right",
+            "Name"     : "CornellBox_Right",
             "Geometry" : {
                 "Type": "Quad",
                 "U"   : [0.0, 555.0,   0.0],
@@ -55,27 +58,16 @@
             },
             "Transform": {
                 "Position": [0.0, 0.0, 0.0],
-                "Rotation": [0.0, 0.0, 0.0],
+                "Rotation": {
+                    "Axis" : [0.0, 1.0, 0.0],
+                    "Angle": -90.0
+                },
                 "Scale"   : [1.0, 1.0, 1.0]
             },
             "Material": "Wall_Red"
         },
         {
-            "Name"     : "CornellBox_Wall_Floor",
-            "Geometry" : {
-                "Type": "Quad",
-                "U"   : [555.0, 0.0,   0.0],
-                "V"   : [  0.0, 0.0, 555.0]
-            },
-            "Transform": {
-                "Position": [0.0, 0.0, 0.0],
-                "Rotation": [0.0, 0.0, 0.0],
-                "Scale"   : [1.0, 1.0, 1.0]
-            },
-            "Material": "Wall_White"
-        },
-        {
-            "Name"     : "CornellBox_Wall_Ceil",
+            "Name"     : "CornellBox_Ceil",
             "Geometry" : {
                 "Type": "Quad",
                 "U"   : [-555.0, 0.0,    0.0],
@@ -83,13 +75,33 @@
             },
             "Transform": {
                 "Position": [555.0, 555.0, 555.0],
-                "Rotation": [  0.0,   0.0,   0.0],
+                "Rotation": {
+                    "Axis" : [1.0, 0.0, 0.0],
+                    "Angle": 90.0
+                },
                 "Scale"   : [  1.0,   1.0,   1.0]
             },
             "Material": "Wall_White"
         },
         {
-            "Name"     : "CornellBox_Wall_Back",
+            "Name"     : "CornellBox_Floor",
+            "Geometry" : {
+                "Type": "Quad",
+                "U"   : [555.0, 0.0,   0.0],
+                "V"   : [  0.0, 0.0, 555.0]
+            },
+            "Transform": {
+                "Position": [0.0, 0.0, 0.0],
+                "Rotation": {
+                    "Axis" : [1.0, 0.0, 0.0],
+                    "Angle": -90.0
+                },
+                "Scale"   : [1.0, 1.0, 1.0]
+            },
+            "Material": "Wall_White"
+        },
+        {
+            "Name"     : "CornellBox_Back",
             "Geometry" : {
                 "Type": "Quad",
                 "U"   : [555.0,   0.0, 0.0],
@@ -97,13 +109,16 @@
             },
             "Transform": {
                 "Position": [0.0, 0.0, 555.0],
-                "Rotation": [0.0, 0.0,   0.0],
+                "Rotation": {
+                    "Axis" : [0.0, 0.0, 0.0],
+                    "Angle": 0.0
+                },
                 "Scale"   : [1.0, 1.0,   1.0]
             },
             "Material": "Wall_White"
         },
         {
-            "Name"     : "LightQuad1",
+            "Name"     : "CeilLight",
             "Geometry" : {
                 "Type": "Quad",
                 "U"   : [-130.0, 0.0,    0.0],
@@ -111,7 +126,10 @@
             },
             "Transform": {
                 "Position": [343.0, 554.0, 332.0],
-                "Rotation": [  0.0,   0.0,   0.0],
+                "Rotation": {
+                    "Axis" : [1.0, 0.0, 0.0],
+                    "Angle": 90.0
+                },
                 "Scale"   : [  1.0,   1.0,   1.0]
             }
         },
@@ -124,7 +142,10 @@
             },
             "Transform": {
                 "Position": [0.0, 0.5, 0.0],
-                "Rotation": [0.0, 0.0, 0.0],
+                "Rotation": {
+                    "Axis" : [0.0, 0.0, 0.0],
+                    "Angle": 0.0
+                },
                 "Scale"   : [1.0, 1.0, 1.0]
             },
             "Material": "Wall_White"
@@ -138,7 +159,10 @@
             },
             "Transform": {
                 "Position": [0.0, 0.5, 0.0],
-                "Rotation": [0.0, 0.0, 0.0],
+                "Rotation": {
+                    "Axis" : [0.0, 0.0, 0.0],
+                    "Angle": 0.0
+                },
                 "Scale"   : [1.0, 1.0, 1.0]
             },
             "Material": "Wall_White"
@@ -146,7 +170,7 @@
     ],
     "Lights": [
         {
-            "Object"   : "LightQuad1",
+            "Object"   : "CeilLight",
             "Color"    : [1.0, 1.0, 1.0],
             "Intensity": 15.0
         }
