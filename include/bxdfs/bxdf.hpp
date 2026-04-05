@@ -1,6 +1,6 @@
 #pragma once
 
-#include "HitResult.hpp"
+#include "hitResult.hpp"
 
 struct SampleResult {
     Vec3 w;

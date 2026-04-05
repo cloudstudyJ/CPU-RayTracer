@@ -187,8 +187,8 @@ int main() {
     snapshot.resize(renderSettings.imgWidth * renderSettings.imgHeight * 3);
 
     Camera camera = {
-        .pos  = {278.0f, 278.0f, -800.0f},
-        .look = {278.0f, 278.0f, 0.0f},
+        .pos  = { .data = { 278.0f, 278.0f, -800.0f } },
+        .look = { .data = { 278.0f, 278.0f,    0.0f } },
 
         .yfov = 40.0f
     };
