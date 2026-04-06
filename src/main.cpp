@@ -1,15 +1,14 @@
-#include "camera.hpp"
 #include "math/math.hpp"
 #include "utility.hpp"
 #include "random.hpp"
 #include "material.hpp"
-#include "solidTexture.hpp"
-#include "objects.hpp"
-#include "bxdfs.hpp"
 #include "math/vec2.hpp"
 #include "worldBuilder.hpp"
 #include "ray.hpp"
 #include "jsonParser.hpp"
+#include "texture.hpp"
+#include "bxdfs/bxdf.hpp"
+#include "objects/rectangle.hpp"
 
 #include "rapidjson/document.h"
 
@@ -183,17 +182,12 @@ int main() {
     renderSettings = std::move(getRenderSettings("../../renderConfig.json"));
     world = std::move(WorldBuilder::buildWorld("../../resources/worlds/cornellBox.json"));
 
+    const Camera& camera = world.getMainCamera();
+
     framebuffer.resize(renderSettings.imgWidth * renderSettings.imgHeight);
     snapshot.resize(renderSettings.imgWidth * renderSettings.imgHeight * 3);
 
-    Camera camera = {
-        .pos  = { .data = { 0.0f, 0.0f, 3.9f } },
-        .look = { .data = { 0.0f, 0.0f, 0.0f } },
-
-        .yfov = 40.0f
-    };
-
-    Vec3 nz = camera.pos - camera.look;
+    Vec3 nz = camera.position - camera.look;
     f32 focalLength = nz.length();
 
     Vec3 z = nz.normalized();
@@ -201,7 +195,7 @@ int main() {
     Vec3 y = Vec3::cross(z, x);
 
     Vec2 viewport;
-    viewport.y = 2 * focalLength * Math::tan(Math::toRad(camera.yfov / 2));
+    viewport.y = 2 * focalLength * Math::tan(Math::toRad(camera.fovY / 2));
     viewport.x = viewport.y * renderSettings.aspectRatio;
 
     Vec3 viewportU = x * viewport.x;
@@ -209,7 +203,7 @@ int main() {
 
     Vec3 viewportdU = viewportU / renderSettings.imgWidth;
     Vec3 viewportdV = viewportV / renderSettings.imgHeight;
-    Vec3 viewportLT = camera.pos - (viewportU / 2.0f) - (viewportV / 2.0f) - nz;
+    Vec3 viewportLT = camera.position - (viewportU / 2.0f) - (viewportV / 2.0f) - nz;
 
     const f32 SQRT_SPP       = static_cast<u16>(Math::sqrt(renderSettings.samplesPerPixel));
     const f32 INV_SQRT_SPP   = 1 / SQRT_SPP;
@@ -241,7 +235,7 @@ int main() {
                                 f32 offsetY = y + ((sampleY + Random::uniform()) * INV_SQRT_SPP);
 
                                 Vec3 samplePos = viewportLT + (viewportdU * offsetX) + (viewportdV * offsetY);
-                                Ray  ray       = {camera.pos, samplePos - camera.pos};
+                                Ray  ray       = {camera.position, samplePos - camera.position};
 
                                 HitResult hitResult = world.traceRay(ray, RAY_T_MIN, INF_F32);
                                 color += (hitResult.isHit ? hitShader(ray, hitResult) : missShader());

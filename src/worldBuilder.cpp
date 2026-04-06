@@ -55,6 +55,8 @@ namespace WorldBuilder {
 
         World world;
         BuildContext ctx = {world};
+
+        world.addCamera(desc.camera);
         for (const auto& material: desc.materials) buildMaterial(ctx, material);
         for (const auto& object  : desc.objects  ) buildObject(ctx, object);
         for (const auto& light   : desc.lights   ) buildLight(ctx, light);

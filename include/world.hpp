@@ -1,8 +1,9 @@
 #pragma once
 
 #include "accelerationStructure.hpp"
-#include "objects/object.hpp"
 #include "components/light.hpp"
+#include "components/camera.hpp"
+#include "objects/object.hpp"
 
 #include <utility>
 #include <memory>
@@ -27,13 +28,16 @@ class World {
         T* addObject(Args&& ... args);
 
         void addLight(Object* obj, const Light& lightInfo) { mLights.push_back(std::pair<Object*, Light>(obj, lightInfo)); }
+        void addCamera(const Camera& camera) noexcept;
         void clearObjects() noexcept;
 
         HitResult traceRay(const Ray& ray, const f32 tMin, const f32 tMax) noexcept { return mAS.hitTest(ray, tMin, tMax); }
 
+        const Camera& getMainCamera() const noexcept { return mMainCamera; }
         const std::vector<std::pair<Object*, Light>>& getLights() const noexcept { return mLights; }
 
     private:
+        Camera                mMainCamera;
         AccelerationStructure mAS;
 
         std::vector<std::unique_ptr<Object>>   mObjects;

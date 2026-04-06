@@ -1,5 +1,6 @@
 #pragma once
 
+#include "components/camera.hpp"
 #include "components/transform.hpp"
 
 #include <string>
@@ -64,6 +65,7 @@ struct LightDesc {
 
 struct WorldDesc {
     // std::string name;
+    Camera camera;
 
     std::vector<MaterialDesc> materials;
     std::vector<ObjectDesc>   objects;

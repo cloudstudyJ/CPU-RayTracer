@@ -48,6 +48,15 @@ namespace {
 }
 
 namespace WorldLoader {
+    Camera parseCamera(const jsonValue& camera) {
+        using namespace JsonParser;
+
+        return {
+            .position = toVec3(camera["Position"]),
+            .look     = toVec3(camera["Look"]),
+            .fovY     = toF32(camera["FovY"])
+        };
+    }
     MaterialDesc parseMaterial(const jsonValue& material) {
         using namespace JsonParser;
 
@@ -106,6 +115,7 @@ namespace WorldLoader {
 
         WorldDesc desc;
 
+        desc.camera = std::move(parseCamera(doc["Camera"]));
         for (u32 i = 0; i < materials.Size(); ++i) desc.materials.emplace_back(parseMaterial(materials[i]));
         for (u32 i = 0; i < objects.Size()  ; ++i) desc.objects.emplace_back(parseObject(objects[i]));
         for (u32 i = 0; i < lights.Size()   ; ++i) desc.lights.emplace_back(parseLight(lights[i]));

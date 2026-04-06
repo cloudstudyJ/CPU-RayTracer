@@ -1,4 +1,4 @@
-# **RayTracingInOneWeekSeries**
+# **CPU-RayTracer**
 
 ## **Result**
 #### **Current Render Output:**
