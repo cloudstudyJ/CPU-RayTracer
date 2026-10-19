@@ -1,6 +1,5 @@
 #include "math/math.hpp"
 #include "utility.hpp"
-#include "random.hpp"
 #include "material.hpp"
 #include "math/vec2.hpp"
 #include "worldBuilder.hpp"
@@ -9,6 +8,7 @@
 #include "texture.hpp"
 #include "bxdfs/bxdf.hpp"
 #include "objects/rectangle.hpp"
+#include "sampling/random.hpp"
 
 #include "rapidjson/document.h"
 
@@ -101,15 +101,14 @@ LightSample sampleRect(const Rectangle& rect) {
     const Vec3 edgeU = rect.edgeU();
     const Vec3 edgeV = rect.edgeV();
 
-    f32  u = Random::uniform(-0.5f, 0.5f);
-    f32  v = Random::uniform(-0.5f, 0.5f);
-    Vec3 n = Vec3::cross(edgeU, edgeV);
-    f32  a = n.length();
+    Vec2 uv   = sampling::uniform2D(-0.5f, 0.5f);
+    Vec3 n    = Vec3::cross(edgeU, edgeV);
+    f32  invA = 1 / n.length();
 
     return {
-        .p   = rect.transform().position + (edgeU * u) + (edgeV * v),
-        .n   = n / a,
-        .pdf = 1.0f / a
+        .p   = rect.transform().position + (edgeU * uv.u) + (edgeV * uv.v),
+        .n   = n * invA,
+        .pdf = invA
     };
 }
 
@@ -205,8 +204,8 @@ Vec3 renderPixel(const Camera& camera, const Viewport& viewport, const u32 x, co
 
     for (u16 sampleY = 0; sampleY < SQRT_SPP; ++sampleY) {
         for (u16 sampleX = 0; sampleX < SQRT_SPP; ++sampleX) {
-            f32 offsetX = x + ((sampleX + Random::uniform()) * INV_SQRT_SPP);
-            f32 offsetY = y + ((sampleY + Random::uniform()) * INV_SQRT_SPP);
+            f32 offsetX = x + ((sampleX + sampling::uniform()) * INV_SQRT_SPP);
+            f32 offsetY = y + ((sampleY + sampling::uniform()) * INV_SQRT_SPP);
 
             Vec3 samplePos = viewport.lt + (viewport.du * offsetX) + (viewport.dv * offsetY);
             Ray  ray       = {camera.position, samplePos - camera.position};

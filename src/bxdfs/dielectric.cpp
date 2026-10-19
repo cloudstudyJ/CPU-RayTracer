@@ -1,5 +1,5 @@
 #include "bxdfs/dielectric.hpp"
-#include "random.hpp"
+#include "sampling/random.hpp"
 
 namespace {
     f32 schlickApprox(const f32 cos, const f32 refractiveIndex) noexcept {
@@ -32,7 +32,7 @@ SampleResult Dielectric::sample(const Vec3& wi, const HitResult& surfaceInfo) co
         out = Vec3::reflect(in, surfaceInfo.normal);
         pdf = 1.0f;
     }
-    else if (fresnel > Random::uniform()) {
+    else if (fresnel > sampling::uniform()) {
         out = Vec3::reflect(in, surfaceInfo.normal);
         pdf = fresnel;
     }
