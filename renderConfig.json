@@ -3,7 +3,7 @@
         "Resolution": [600, 600],
         "Sampling"  : {
             "SamplesPerPixel": 200,
-            "MaxRayBounces"  : 8
+            "MaxRayDepth"    : 8
         }
     }
 }

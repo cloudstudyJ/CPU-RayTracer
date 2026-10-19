@@ -19,19 +19,19 @@
 #include <thread>
 #include <atomic>
 
-struct RenderSettings {
-    u32 imgWidth {};
-    u32 imgHeight{};
-    f32 aspectRatio{};
-
-    u32 samplesPerPixel{};
-    u32 maxRayBounces  {};
-
-    u32 threads{};
-} renderSettings;
-
-constexpr f32 TWO_PI = Math::PI * 2;
-constexpr f32 INV_TWO_PI = 1 / TWO_PI;
+struct RenderConfig {
+    u32 imgW       {};
+    u32 imgH       {};
+    f32 aspect     {};
+    u32 spp        {};
+    u32 maxRayDepth{};
+    u32 threads    {};
+};
+struct Viewport {
+    Vec3 lt;
+    Vec3 du;
+    Vec3 dv;
+};
 
 constexpr Vec3 WORLD_Y     = {0.0f, 1.0f, 0.0f};
 constexpr Vec3 COLOR_BLACK = {0.0f, 0.0f, 0.0f};
@@ -40,9 +40,29 @@ constexpr Vec3 COLOR_WHITE = {1.0f, 1.0f, 1.0f};
 std::vector<Vec3> framebuffer;
 std::vector<byte> snapshot;
 
+RenderConfig renderConfig;
 World world;
 
-RenderSettings getRenderSettings(const char* file) {
+Viewport getViewport(const Camera& camera, const f32 imgW, const f32 imgH) noexcept {
+    Vec3 negativeZ   = camera.position - camera.look;
+    f32  focalLength = negativeZ.length();
+
+    Vec3 z = negativeZ.normalized();
+    Vec3 x = Vec3::cross(WORLD_Y, z).normalized();
+    Vec3 y = Vec3::cross(z, x);
+
+    f32  viewportY = 2 * focalLength * Math::tan(Math::toRad(camera.fovY * 0.5f));
+    f32  viewportX = viewportY * (static_cast<f32>(imgW) / imgH);
+    Vec3 viewportU = x * viewportX;
+    Vec3 viewportV = y * -viewportY;
+
+    return {
+        .lt = camera.position - (viewportU * 0.5f) - (viewportV * 0.5f) - negativeZ,
+        .du = viewportU / imgW,
+        .dv = viewportV / imgH
+    };
+}
+RenderConfig getRenderConfig(const char* file) {
     jsonDocument doc = JsonParser::getDocument(file);
 
     const jsonValue& renderer = doc["Renderer"];
@@ -52,14 +72,12 @@ RenderSettings getRenderSettings(const char* file) {
     u32 h = JsonParser::toU32(renderer["Resolution"][1]);
 
     return {
-        .imgWidth    = w,
-        .imgHeight   = h,
-        .aspectRatio = static_cast<f32>(w) / h,
-
-        .samplesPerPixel = JsonParser::toU32(sampling["SamplesPerPixel"]),
-        .maxRayBounces   = JsonParser::toU32(sampling["MaxRayBounces"]),
-
-        .threads = Utility::max(1u, std::thread::hardware_concurrency())
+        .imgW        = w,
+        .imgH        = h,
+        .aspect      = static_cast<f32>(w) / h,
+        .spp         = JsonParser::toU32(sampling["SamplesPerPixel"]),
+        .maxRayDepth = JsonParser::toU32(sampling["MaxRayDepth"]),
+        .threads     = Utility::max(1u, std::thread::hardware_concurrency())
     };
 }
 
@@ -100,7 +118,7 @@ Vec3 missShader() {
     return COLOR_BLACK;
 }
 Vec3 hitShader(const Ray& ray, const HitResult& hitResult, u16 depth = 1) {
-    if (depth > renderSettings.maxRayBounces)
+    if (depth > renderConfig.maxRayDepth)
         return {};
 
     const auto& hitObject = hitResult.object;
@@ -178,39 +196,41 @@ Vec3 hitShader(const Ray& ray, const HitResult& hitResult, u16 depth = 1) {
     return L_e + L_direct + L_indirect;
 }
 
+Vec3 renderPixel(const Camera& camera, const Viewport& viewport, const u32 x, const u32 y) noexcept {
+    const u32 SQRT_SPP       = static_cast<u16>(Math::sqrt(renderConfig.spp));
+    const f32 INV_SQRT_SPP   = 1.0f / SQRT_SPP;
+    const f32 SQRT_SPP_SCALE = INV_SQRT_SPP * INV_SQRT_SPP;
+
+    Vec3 color;
+
+    for (u16 sampleY = 0; sampleY < SQRT_SPP; ++sampleY) {
+        for (u16 sampleX = 0; sampleX < SQRT_SPP; ++sampleX) {
+            f32 offsetX = x + ((sampleX + Random::uniform()) * INV_SQRT_SPP);
+            f32 offsetY = y + ((sampleY + Random::uniform()) * INV_SQRT_SPP);
+
+            Vec3 samplePos = viewport.lt + (viewport.du * offsetX) + (viewport.dv * offsetY);
+            Ray  ray       = {camera.position, samplePos - camera.position};
+
+            HitResult hitResult = world.traceRay(ray, RAY_T_MIN, INF_F32);
+            color += (hitResult.isHit ? hitShader(ray, hitResult) : missShader());
+        }
+    }
+
+    return color * SQRT_SPP_SCALE;
+}
+
 int main() {
-    renderSettings = std::move(getRenderSettings("../../renderConfig.json"));
-    world = std::move(WorldBuilder::buildWorld("../../resources/worlds/cornellBox.json"));
+    renderConfig = std::move(getRenderConfig("../../renderConfig.json"));
+    world        = std::move(WorldBuilder::buildWorld("../../resources/worlds/cornellbox.json"));
 
-    const Camera& camera = world.getMainCamera();
+    const Camera&  camera   = world.getMainCamera();
+    const Viewport viewport = getViewport(camera, renderConfig.imgW, renderConfig.imgH);
 
-    framebuffer.resize(renderSettings.imgWidth * renderSettings.imgHeight);
-    snapshot.resize(renderSettings.imgWidth * renderSettings.imgHeight * 3);
-
-    Vec3 nz = camera.position - camera.look;
-    f32 focalLength = nz.length();
-
-    Vec3 z = nz.normalized();
-    Vec3 x = Vec3::cross(WORLD_Y, z).normalized();
-    Vec3 y = Vec3::cross(z, x);
-
-    Vec2 viewport;
-    viewport.y = 2 * focalLength * Math::tan(Math::toRad(camera.fovY / 2));
-    viewport.x = viewport.y * renderSettings.aspectRatio;
-
-    Vec3 viewportU = x * viewport.x;
-    Vec3 viewportV = y * -viewport.y;
-
-    Vec3 viewportdU = viewportU / renderSettings.imgWidth;
-    Vec3 viewportdV = viewportV / renderSettings.imgHeight;
-    Vec3 viewportLT = camera.position - (viewportU / 2.0f) - (viewportV / 2.0f) - nz;
-
-    const f32 SQRT_SPP       = static_cast<u16>(Math::sqrt(renderSettings.samplesPerPixel));
-    const f32 INV_SQRT_SPP   = 1 / SQRT_SPP;
-    const f32 SQRT_SPP_SCALE = 1 / (SQRT_SPP * SQRT_SPP);
+    framebuffer.resize(renderConfig.imgW * renderConfig.imgH);
+    snapshot.resize(renderConfig.imgW * renderConfig.imgH * 3);
 
     std::vector<std::thread> threads;
-    threads.reserve(renderSettings.threads);
+    threads.reserve(renderConfig.threads);
 
     std::chrono::steady_clock::time_point start, end;
     start = std::chrono::steady_clock::now();
@@ -220,34 +240,20 @@ int main() {
         auto render = [&]() {
             while (true) {
                 u32 yFrom = nextChunk.fetch_add(1, std::memory_order_relaxed);
-                u32 yTo   = Utility::min(yFrom + 1, renderSettings.imgHeight);
+                u32 yTo   = Utility::min(yFrom + 1, renderConfig.imgH);
 
-                if (yFrom >= renderSettings.imgHeight)
+                if (yFrom >= renderConfig.imgH)
                     break;
 
                 for (u32 y = yFrom; y < yTo; ++y) {
-                    for (u32 x = 0; x < renderSettings.imgWidth; ++x) {
-                        Vec3 color;
-
-                        for (u16 sampleY = 0; sampleY < SQRT_SPP; ++sampleY) {
-                            for (u16 sampleX = 0; sampleX < SQRT_SPP; ++sampleX) {
-                                f32 offsetX = x + ((sampleX + Random::uniform()) * INV_SQRT_SPP);
-                                f32 offsetY = y + ((sampleY + Random::uniform()) * INV_SQRT_SPP);
-
-                                Vec3 samplePos = viewportLT + (viewportdU * offsetX) + (viewportdV * offsetY);
-                                Ray  ray       = {camera.position, samplePos - camera.position};
-
-                                HitResult hitResult = world.traceRay(ray, RAY_T_MIN, INF_F32);
-                                color += (hitResult.isHit ? hitShader(ray, hitResult) : missShader());
-                            }
-                        }
-                        color *= SQRT_SPP_SCALE;
+                    for (u32 x = 0; x < renderConfig.imgW; ++x) {
+                        Vec3 color = renderPixel(camera, viewport, x, y);
 
                         if (color.r != color.r) color.r = 0.0f;
                         if (color.g != color.g) color.g = 0.0f;
                         if (color.b != color.b) color.b = 0.0f;
 
-                        u32 idx = (y * renderSettings.imgWidth + x);
+                        u32 idx = (y * renderConfig.imgW + x);
 
                         framebuffer[idx] = color;
                         color = gammaCorrection(color);
@@ -263,7 +269,7 @@ int main() {
             }
         };
 
-        for (u16 i = 0; i < renderSettings.threads; ++i)
+        for (u16 i = 0; i < renderConfig.threads; ++i)
             threads.emplace_back(render);
 
         for (auto& thread: threads)
@@ -274,14 +280,14 @@ int main() {
     std::ofstream writer("result.ppm", std::ios::binary);
 
     writer << "P6\n";
-    writer << renderSettings.imgWidth << ' ' << renderSettings.imgHeight << '\n';
+    writer << renderConfig.imgW << ' ' << renderConfig.imgH << '\n';
     writer << "255\n";
     writer.write(reinterpret_cast<const char*>(snapshot.data()), snapshot.size());
 
-    std::cout << "Threads: " << renderSettings.threads << '\n';
-    std::cout << "Resolution: " << renderSettings.imgWidth << 'x' << renderSettings.imgHeight << '\n';
-    std::cout << "Max Ray Bounces: " << renderSettings.maxRayBounces << '\n';
-    std::cout << "Samples Per Pixel: " << renderSettings.samplesPerPixel << '\n';
+    std::cout << "Threads: " << renderConfig.threads << '\n';
+    std::cout << "Resolution: " << renderConfig.imgW << 'x' << renderConfig.imgH << '\n';
+    std::cout << "Max Ray Bounces: " << renderConfig.maxRayDepth << '\n';
+    std::cout << "Samples Per Pixel: " << renderConfig.spp << '\n';
     std::cout << "Render Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " [ms]\n";
 
     return 0;
