@@ -73,7 +73,7 @@ void AccelerationStructure::clear() noexcept {
     mRoot = {};
 }
 
-HitResult AccelerationStructure::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) noexcept {
+HitResult AccelerationStructure::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept {
     Node* stk[128];
 
     u32 ptr{};

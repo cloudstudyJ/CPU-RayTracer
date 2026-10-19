@@ -34,7 +34,7 @@ class AccelerationStructure {
         void build(const std::vector<std::unique_ptr<Object>>& objects);
         void clear() noexcept;
 
-        HitResult hitTest(const Ray& ray, const f32 tMin, const f32 tMax) noexcept;
+        HitResult hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept;
 
     private:
         Node* build(std::vector<Object*>& objRefs, const u32 from, const u32 to);
