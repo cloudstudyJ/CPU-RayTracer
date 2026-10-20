@@ -18,10 +18,15 @@ Vec3 sampleSphericalBand(const f32 zMin, const f32 zMax) noexcept {
 }
 
 namespace sampling {
-    Vec3 uniformSphere() {
-        return sampleSphericalBand(-1.0f, 1.0f);
+    Vec3 uniformSphere(const f32 radius) {
+        return sampleSphericalBand(-1.0f, 1.0f) * radius;
     }
-    Vec3 uniformHemisphere() {
-        return sampleSphericalBand(0.0f, 1.0f);
+    Vec3 uniformHemisphere(const f32 radius) {
+        return sampleSphericalBand(0.0f, 1.0f) * radius;
+    }
+    Vec3 uniformRectangle(const Vec3& edgeU, const Vec3& edgeV) {
+        const Vec2 uv = sampling::uniform2D(-0.5f, 0.5f);
+
+        return ((edgeU * uv.u) + (edgeV * uv.v));
     }
 }
