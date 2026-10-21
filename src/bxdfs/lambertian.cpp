@@ -1,16 +1,32 @@
 #include "bxdfs/lambertian.hpp"
 #include "sampling/importance.hpp"
-#include "onb.hpp"
 #include "utility.hpp"
 
-f32 Lambertian::eval() const noexcept { return Math::INV_PI; }
-f32 Lambertian::pdf(const Vec3& wi, const Vec3& n) const noexcept { return Utility::max(0.0f, Vec3::dot(n, wi)) * Math::INV_PI; }
+Lambertian::Lambertian(const Vec3& albedo) noexcept
+    : BxDF()
+    , mAlbedo(albedo) { }
 
-SampleResult Lambertian::sample(const Vec3& wi, const HitResult& surfaceInfo) const noexcept {
-    Vec3 w = ONB(surfaceInfo.normal).transform(sampling::cosHemisphere());
+Vec3 Lambertian::f(const Vec3& wo, const Vec3& wi) const noexcept {
+    if ((wo.z <= 0.0f) || (wi.z <= 0.0f))
+        return {};
+
+    return (mAlbedo * Math::INV_PI);
+}
+f32 Lambertian::pdf(const Vec3& wo, const Vec3& wi) const noexcept {
+    if (wo.z <= 0.0f)
+        return {};
+
+    return (Utility::max(0.0f, wi.z) * Math::INV_PI);
+}
+BxDFSample Lambertian::sample(const Vec3& wo) const noexcept {
+    if (wo.z <= 0.0f)
+        return {};
+
+    const Vec3 wi = sampling::cosHemisphere();
 
     return {
-        .w   = w,
-        .pdf = pdf(w, surfaceInfo.normal)
+        .wi  = wi,
+        .f   = f(wo, wi),
+        .pdf = pdf(wo, wi)
     };
 }
