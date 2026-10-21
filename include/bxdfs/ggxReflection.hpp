@@ -15,7 +15,7 @@ class GGXReflection: public BxDF {
 
         Vec3       f(const Vec3& wo, const Vec3& wi) const noexcept override;
         f32        pdf(const Vec3& wo, const Vec3& wi) const noexcept override;
-        BxDFSample sample(const Vec3& wo) const noexcept override;
+        BxDFSample sample(const Vec3& wo) const override;
 
     private:
         Vec3 mF0;

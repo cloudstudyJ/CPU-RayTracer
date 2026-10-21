@@ -13,10 +13,8 @@ namespace sampling {
     // [0.0f, 1.0f)^2
     Vec2 uniform2D() {
         return {
-            .data = {
-                uniform(),
-                uniform()
-            }
+            uniform(),
+            uniform()
         };
     }
 
@@ -27,10 +25,8 @@ namespace sampling {
     // [from, to)^2
     Vec2 uniform2D(const f32 from, const f32 to) {
         return {
-            .data = {
-                uniform(from, to),
-                uniform(from, to)
-            }
+            uniform(from, to),
+            uniform(from, to)
         };
     }
 }

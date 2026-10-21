@@ -19,7 +19,7 @@ class BxDF {
 
         virtual Vec3       f(const Vec3& wo, const Vec3& wi) const noexcept = 0;
         virtual f32        pdf(const Vec3& wo, const Vec3& wi) const noexcept = 0;
-        virtual BxDFSample sample(const Vec3& wo) const noexcept = 0;
+        virtual BxDFSample sample(const Vec3& wo) const = 0;
 
     protected:
         BxDF() noexcept = default;

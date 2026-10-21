@@ -18,7 +18,7 @@ f32 Lambertian::pdf(const Vec3& wo, const Vec3& wi) const noexcept {
 
     return (Utility::max(0.0f, wi.z) * Math::INV_PI);
 }
-BxDFSample Lambertian::sample(const Vec3& wo) const noexcept {
+BxDFSample Lambertian::sample(const Vec3& wo) const {
     if (wo.z <= 0.0f)
         return {};
 
