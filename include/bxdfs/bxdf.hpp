@@ -1,16 +1,26 @@
 #pragma once
 
-#include "hitResult.hpp"
+#include "math/vec3.hpp"
 
-struct SampleResult {
-    Vec3 w;
+struct BxDFSample {
+    Vec3 wi;        // Direction to incoming radiance src (new sampled)
+    Vec3 f;
     f32  pdf{};
 };
 
 class BxDF {
-    public:
-        virtual f32 eval() const noexcept = 0;
-        virtual f32 pdf(const Vec3& wi, const Vec3& n) const noexcept = 0;
+    BxDF(const BxDF&)                = delete;
+    BxDF(BxDF&&) noexcept            = delete;
+    BxDF& operator=(const BxDF&)     = delete;
+    BxDF& operator=(BxDF&&) noexcept = delete;
 
-        virtual SampleResult sample(const Vec3& wi, const HitResult& surfaceInfo) const noexcept = 0;
+    public:
+        virtual ~BxDF() noexcept = default;
+
+        virtual Vec3       f(const Vec3& wo, const Vec3& wi) const noexcept = 0;
+        virtual f32        pdf(const Vec3& wo, const Vec3& wi) const noexcept = 0;
+        virtual BxDFSample sample(const Vec3& wo) const noexcept = 0;
+
+    protected:
+        BxDF() noexcept = default;
 };
