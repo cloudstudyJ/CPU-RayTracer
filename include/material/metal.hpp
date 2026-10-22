@@ -18,7 +18,9 @@ class Metal: public Material {
         explicit Metal(std::shared_ptr<Texture> texture, const f32 roughness) noexcept;
         ~Metal() noexcept override = default;
 
-        BxDFSample interact(const HitResult& hitResult, const Vec3& wo) const override;
+        Vec3       evaluate(const HitResult& hitResult, const Vec3& wo, const Vec3& wi) const override;
+        f32        pdf(const HitResult& hitResult, const Vec3& wo, const Vec3& wi) const override;
+        BxDFSample sample(const HitResult& hitResult, const Vec3& wo) const override;
 
     private:
         f32                      mRoughness{};

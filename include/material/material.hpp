@@ -13,7 +13,9 @@ class Material {
     public:
         virtual ~Material() noexcept = default;
 
-        virtual BxDFSample interact(const HitResult& hitResult, const Vec3& wo) const = 0;
+        virtual Vec3       evaluate(const HitResult& hitResult, const Vec3& wo, const Vec3& wi) const = 0;
+        virtual f32        pdf(const HitResult& hitResult, const Vec3& wo, const Vec3& wi) const = 0;
+        virtual BxDFSample sample(const HitResult& hitResult, const Vec3& wo) const = 0;
 
     protected:
         Material() noexcept = default;

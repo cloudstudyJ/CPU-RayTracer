@@ -18,7 +18,9 @@ class Diffuse: public Material {
         explicit Diffuse(std::shared_ptr<Texture> texture) noexcept;
         ~Diffuse() noexcept override = default;
 
-        BxDFSample interact(const HitResult& hitResult, const Vec3& wo) const override;
+        Vec3       evaluate(const HitResult& hitResult, const Vec3& wo, const Vec3& wi) const override;
+        f32        pdf(const HitResult& hitResult, const Vec3& wo, const Vec3& wi) const override;
+        BxDFSample sample(const HitResult& hitResult, const Vec3& wo) const override;
 
     private:
         std::shared_ptr<Texture> mTexture;
