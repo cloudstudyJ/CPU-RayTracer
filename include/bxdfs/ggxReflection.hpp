@@ -11,7 +11,7 @@ class GGXReflection: public BxDF {
 
     public:
         explicit GGXReflection(const Vec3& f0, const f32 roughness) noexcept;
-        virtual ~GGXReflection() noexcept = default;
+        ~GGXReflection() noexcept override = default;
 
         Vec3       f(const Vec3& wo, const Vec3& wi) const noexcept override;
         f32        pdf(const Vec3& wo, const Vec3& wi) const noexcept override;

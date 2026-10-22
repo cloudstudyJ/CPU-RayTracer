@@ -11,7 +11,7 @@ class Lambertian: public BxDF {
 
     public:
         explicit Lambertian(const Vec3& albedo) noexcept;
-        virtual ~Lambertian() noexcept = default;
+        ~Lambertian() noexcept override = default;
 
         Vec3       f(const Vec3& wo, const Vec3& wi) const noexcept override;
         f32        pdf(const Vec3& wo, const Vec3& wi) const noexcept override;
