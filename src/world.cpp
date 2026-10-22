@@ -34,3 +34,7 @@ void World::clearObjects() noexcept {
     mObjects.clear();
     mLights.clear();
 }
+
+bool World::isOccluded(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept {
+    return traceRay(ray, tMin, tMax).isHit;
+}

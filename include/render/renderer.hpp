@@ -1,6 +1,7 @@
 #pragma once
 
 #include "math/vec3.hpp"
+#include "integrator/path.hpp"
 
 #include <vector>
 
@@ -39,11 +40,10 @@ class Renderer {
         const std::vector<Vec3> frameBuffer() const noexcept;
 
     private:
-        Vec3 missPass() noexcept;
-        Vec3 hitPass(const World& world, const Ray& ray, const HitResult& hitResult, u16 depth = 1) noexcept;
         Vec3 renderPixel(const World& world, const Camera& camera, const Viewport& viewport, const u32 x, const u32 y) noexcept;
 
     private:
         RenderConfig      mConfig;
+        integrator::Path  mIntegrator;
         std::vector<Vec3> mFrameBuffer;
 };

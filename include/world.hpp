@@ -36,6 +36,8 @@ class World {
         const Camera& getMainCamera() const noexcept { return mMainCamera; }
         const std::vector<std::pair<Object*, Light>>& getLights() const noexcept { return mLights; }
 
+        bool isOccluded(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept;
+
     private:
         Camera                mMainCamera;
         AccelerationStructure mAS;
