@@ -1,11 +1,11 @@
 #include "render/renderer.hpp"
 #include "sampling/random.hpp"
-#include "objects/rectangle.hpp"
 #include "texture.hpp"
 #include "bxdfs/bxdf.hpp"
 #include "ray.hpp"
 #include "world.hpp"
 #include "jsonParser.hpp"
+#include "onb.hpp"
 
 #include "rapidjson/document.h"
 
@@ -58,28 +58,6 @@ Viewport getViewport(const Camera& camera, const f32 imgW, const f32 imgH) noexc
         .dv = viewportV / imgH
     };
 }
-
-struct LightSample {
-    Vec3 p;
-    Vec3 n;
-    f32  pdf{};
-};
-
-LightSample sampleRect(const Rectangle& rect) {
-    const Vec3 edgeU = rect.edgeU();
-    const Vec3 edgeV = rect.edgeV();
-
-    Vec2 uv   = sampling::uniform2D(-0.5f, 0.5f);
-    Vec3 n    = Vec3::cross(edgeU, edgeV);
-    f32  invA = 1 / n.length();
-
-    return {
-        .p   = rect.transform().position + (edgeU * uv.u) + (edgeV * uv.v),
-        .n   = n * invA,
-        .pdf = invA
-    };
-}
-
 
 Renderer::Renderer(const char* renderConfigPath) noexcept
     : mConfig(getRenderConfig(renderConfigPath)) {
@@ -140,59 +118,67 @@ Vec3 Renderer::hitPass(const World& world, const Ray& ray, const HitResult& hitR
 
     const auto& hitObject = hitResult.object;
     const auto& material  = hitObject->material();
-    const auto& bxdf      = (material ? material->bxdf : nullptr);
 
-    Vec3 L_e;
-    Vec3 L_direct;
-    Vec3 L_indirect;
+    Vec3 Le, L_direct, L_indirect;
 
+    // Emission
     for (const auto& [light, info]: world.getLights()) {
         if (hitObject == light) {
-            L_e = info.color * info.intensity;
+            Le = info.color * info.intensity;
             break;
         }
     }
 
-    if (bxdf) {
-        Vec3 f = material->texture->color(hitResult.u, hitResult.v) * bxdf->eval();
+    if (!material)
+        return Le;
 
-        // Direct Lighting
-        for (const auto& [light, info]: world.getLights()) {
-            if (hitObject == light)
-                continue;
+    const ONB  onb = ONB(hitResult.normal);
+    const Vec3 wo  = onb.toLocal(-ray.direction);
 
-            LightSample lightSample = sampleRect(*static_cast<Rectangle*>(light));
-            Vec3        wiLight     = lightSample.p - hitResult.hitPoint;
-            f32         r           = wiLight.length();
-                        wiLight     = wiLight / r;
-            Ray         wiLightRay  = {hitResult.hitPoint, wiLight};
-            f32         cosTheta    = Vec3::dot(hitResult.normal, wiLight);
-            f32         cosPhi      = Vec3::dot(lightSample.n, -wiLight);
+    // Direct Lighting
+    for (const auto& [light, info]: world.getLights()) {
+        if (hitObject == light)
+            continue;
 
-            if ((cosTheta <= 0.0f) || (cosPhi <= 0.0f))
-                continue;
+        SurfaceSample lightSample = info.sample(*light);
+        Vec3          wiLight     = lightSample.point - hitResult.hitPoint;
+        f32           r           = wiLight.length();
+                      wiLight     = wiLight / r;
+        Ray           wiLightRay  = {hitResult.hitPoint, wiLight};
+        f32           cosTheta    = Vec3::dot(hitResult.normal, wiLight);
+        f32           cosPhi      = Vec3::dot(lightSample.normal, -wiLight);
 
-            // visbility check
-            HitResult shadowHitResult = world.traceRay(wiLightRay, RAY_T_MIN, r - RAY_T_MIN);
-            if (!shadowHitResult.isHit) {
-                Vec3 L_le = info.color * info.intensity;
+        if ((cosTheta <= 0.0f) || (cosPhi <= 0.0f))
+            continue;
 
-                L_direct += (f * L_le * cosTheta * cosPhi) / (r * r * lightSample.pdf);
-            }
+        // visbility check
+        HitResult shadowHitResult = world.traceRay(wiLightRay, RAY_T_MIN, r - RAY_T_MIN);
+        if (!shadowHitResult.isHit) {
+            const Vec3 L_le = info.color * info.intensity;
+            const Vec3 f    = material->evaluate(hitResult, wo, onb.toLocal(wiLight));
+
+            L_direct += (f * L_le * cosTheta * cosPhi) / (r * r * lightSample.pdf);
         }
+    }
 
-        // Indirect Lighting
-        SampleResult sampleResult = bxdf->sample(ray.direction, hitResult);
+    // Indirect Lighting
+    BxDFSample indirectSample = material->sample(hitResult, wo);
 
-        Vec3 wi    = sampleResult.w;
-        Ray  wiRay = {hitResult.hitPoint, wi};
+    if (indirectSample.pdf > 0.0f) {
+        const Ray       wiRay       = { hitResult.hitPoint, onb.toWorld(indirectSample.wi) };
+        const HitResult wiHitResult = world.traceRay(wiRay, RAY_T_MIN, INF_F32);
+        const f32       cos         = Math::abs(indirectSample.wi.z);
+        /* const Vec3      Li          = (
+            (wiHitResult.isHit)
+                ? hitPass(world, wiRay, wiHitResult, depth + 1)
+                : missPass()
+        ); */
 
-        HitResult wiHitResult = world.traceRay(wiRay, RAY_T_MIN, INF_F32);
-
-        Vec3 L_i;
-        bool hitLight = false;
+        Vec3 Li;
 
         if (wiHitResult.isHit) {
+            bool hitLight = false;
+
             for (const auto& [light, info]: world.getLights()) {
                 if (wiHitResult.object == light) {
                     hitLight = true;
@@ -200,17 +186,16 @@ Vec3 Renderer::hitPass(const World& world, const Ray& ray, const HitResult& hitR
                 }
             }
 
-            L_i = (hitLight ? Vec3{} : hitPass(world, wiRay, wiHitResult, depth + 1));
+            if (!hitLight)
+                Li = hitPass(world, wiRay, wiHitResult, depth + 1);
         }
         else
-            L_i = missPass();
+            Li = missPass();
 
-        f32 cosTheta   = Utility::max(0.0f, Vec3::dot(hitResult.normal, wi));
-        f32 pdf        = sampleResult.pdf;
-            L_indirect = (f * L_i * cosTheta) / pdf;
+        L_indirect = (indirectSample.f * Li * cos) / indirectSample.pdf;
     }
 
-    return L_e + L_direct + L_indirect;
+    return Le + L_direct + L_indirect;
 }
 
 Vec3 Renderer::renderPixel(const World& world, const Camera& camera, const Viewport& viewport, const u32 x, const u32 y) noexcept {
