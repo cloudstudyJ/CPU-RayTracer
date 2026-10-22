@@ -3,11 +3,13 @@
 #include "ray.hpp"
 #include "onb.hpp"
 #include "material/material.hpp"
+#include "sampling/mis.hpp"
 
 struct RayPayload {
     Ray  ray;
     Vec3 throughput;
     Vec3 radiance;
+    f32  prevPDF   {};  // bxdfSample pdf
 };
 
 namespace integrator {
@@ -73,22 +75,27 @@ namespace integrator {
                 Ray shadowRay = { hitResult.hitPoint, wiLight };
 
                 if (!world.isOccluded(shadowRay, RAY_T_MIN, wiLength - RAY_T_MIN)) {
-                    const Vec3 L_le     = lightInfo.color * lightInfo.intensity;
-                    const Vec3 f        = material->evaluate(hitResult, wo, onb.toLocal(wiLight));
-                    const Vec3 L_direct = (f * L_le * cosSurface * cosLightSurface) / (wiLength * wiLength * lightSample.pdf);
+                    const Vec3 wiLocal   = onb.toLocal(wiLight);
+                    const Vec3 L_le      = lightInfo.color * lightInfo.intensity;
+                    const Vec3 f         = material->evaluate(hitResult, wo, wiLocal);
+                    const f32  pdfLight  = (wiLength * wiLength * lightSample.pdf) / cosLightSurface;
+                    const f32  pdfBxDF   = material->pdf(hitResult, wo, wiLocal);
+                    const f32  misWeight = sampling::powerHeuristic(pdfLight, pdfBxDF);
+                    const Vec3 L_direct  = (f * L_le * cosSurface * misWeight) / pdfLight;
 
                     rayPayload.radiance += (rayPayload.throughput * L_direct);
                 }
             }
 
-            // Indirect Estimation
-            BxDFSample indirectSample = material->sample(hitResult, wo);
+            // Next Estimation Ready
+            BxDFSample bxdfSample = material->sample(hitResult, wo);
 
-            if (indirectSample.pdf <= 0.0f)
+            if (bxdfSample.pdf <= 0.0f)
                 break;
 
-            rayPayload.throughput *= ((indirectSample.f * Math::abs(indirectSample.wi.z)) / indirectSample.pdf);
-            rayPayload.ray         = { hitResult.hitPoint, onb.toWorld(indirectSample.wi) };
+            rayPayload.ray         = { hitResult.hitPoint, onb.toWorld(bxdfSample.wi) };
+            rayPayload.throughput *= ((bxdfSample.f * Math::abs(bxdfSample.wi.z)) / bxdfSample.pdf);
+            rayPayload.prevPDF     = bxdfSample.pdf;
         }
 
         return rayPayload.radiance;
