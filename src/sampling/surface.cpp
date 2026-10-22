@@ -20,12 +20,11 @@ namespace sampling {
         const Vec3 edgeU = rectangle.edgeU();
         const Vec3 edgeV = rectangle.edgeV();
 
-        const Vec3 offset  = sampling::uniformRectangle(edgeU, edgeV);
         const Vec3 normal  = Vec3::cross(edgeU, edgeV);
         const f32  invArea = 1 / normal.length();
 
         return {
-            .point  = rectangle.transform().position + offset,
+            .point  = rectangle.transform().position + sampling::uniformRectangle(edgeU, edgeV),
             .normal = normal * invArea,
             .pdf    = invArea
         };
