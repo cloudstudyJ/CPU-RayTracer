@@ -6,8 +6,6 @@
 #include <vector>
 #include <chrono>
 
-World world;
-
 std::chrono::steady_clock::time_point start, end;
 
 Vec3 gammaCorrection(const Vec3& linearColor) {
@@ -24,7 +22,7 @@ int main() {
     Renderer renderer("../../renderConfig.json");
     const auto renderConfig = renderer.renderConfig();
 
-    world = std::move(WorldBuilder::buildWorld("../../resources/worlds/cornellbox.json"));
+    World world = std::move(WorldBuilder::buildWorld("../../resources/worlds/cornellbox.json"));
 
     start = std::chrono::steady_clock::now();
     renderer.render(world);

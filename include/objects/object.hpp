@@ -2,7 +2,7 @@
 
 #include "hitResult.hpp"
 #include "aabb.hpp"
-#include "material.hpp"
+#include "material/material.hpp"
 #include "components/transform.hpp"
 
 #include <memory>
