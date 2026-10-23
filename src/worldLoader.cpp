@@ -26,11 +26,9 @@ namespace {
 
     Vec3 toVec3(const jsonValue& v) {
         return {
-            .data = {
-                JsonParser::toF32(v[0]),
-                JsonParser::toF32(v[1]),
-                JsonParser::toF32(v[2])
-            }
+            JsonParser::toF32(v[0]),
+            JsonParser::toF32(v[1]),
+            JsonParser::toF32(v[2])
         };
     }
     Transform toTransform(const jsonValue& v) {
@@ -41,7 +39,7 @@ namespace {
 
         return {
             .position = toVec3(v["Position"]),
-            .rotation = { .data = { axis.x, axis.y, axis.z, angle } },
+            .rotation = { axis.x, axis.y, axis.z, angle },
             .scale    = toVec3(v["Scale"])
         };
     }
@@ -115,7 +113,7 @@ namespace WorldLoader {
 
         WorldDesc desc;
 
-        desc.camera = std::move(parseCamera(doc["Camera"]));
+        desc.camera = parseCamera(doc["Camera"]);
         for (u32 i = 0; i < materials.Size(); ++i) desc.materials.emplace_back(parseMaterial(materials[i]));
         for (u32 i = 0; i < objects.Size()  ; ++i) desc.objects.emplace_back(parseObject(objects[i]));
         for (u32 i = 0; i < lights.Size()   ; ++i) desc.lights.emplace_back(parseLight(lights[i]));

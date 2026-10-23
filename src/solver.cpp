@@ -19,7 +19,7 @@ HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, 
     if (discriminant < -EPS_F32)
         return {};
 
-    f32 sqrtD = Math::sqrt(Utility::max(discriminant, 0.0f));
+    f32 sqrtD = Math::sqrt(Utility::max(0.0f, discriminant));
     f32 invA  = 1 / a;
     f32 t0    = (h - sqrtD) * invA;
     f32 t1    = (h + sqrtD) * invA;

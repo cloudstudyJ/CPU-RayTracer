@@ -1,5 +1,5 @@
 #pragma once
 
 #include "bxdfs/lambertian.hpp"
-#include "bxdfs/metal.hpp"
+#include "bxdfs/ggxReflection.hpp"
 #include "bxdfs/dielectric.hpp"

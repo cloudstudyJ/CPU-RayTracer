@@ -4,17 +4,14 @@
 
 namespace sampling {
     Vec3 cosHemisphere() {
-        const f32 phi   = Math::TWO_PI * sampling::uniform();
-        const f32 sinSQ = sampling::uniform();
-        const f32 sin   = Math::sqrt(Utility::max(0.0f, sinSQ));
-        const f32 cos   = Math::sqrt(Utility::max(0.0f, 1 - sinSQ));
+        const Vec2 uv  = sampling::uniform2D();
+        const f32  phi = Math::TWO_PI * uv.u;
+        const f32  r   = Math::sqrt(uv.v);
 
         return {
-            .data = {
-                sin * Math::cos(phi),
-                sin * Math::sin(phi),
-                cos
-            }
+            r * Math::cos(phi),
+            r * Math::sin(phi),
+            Math::sqrt(Utility::max(1.0f, 1 - uv.v))
         };
     }
 }
