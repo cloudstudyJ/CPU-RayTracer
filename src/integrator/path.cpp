@@ -38,12 +38,28 @@ namespace integrator {
 
             // Emission Accumulation
             for (const auto& [light, lightInfo]: lightList) {
-                if (hitObject == light) {
-                    if (depth == 0)
-                        rayPayload.radiance += (rayPayload.throughput * (lightInfo.color * lightInfo.intensity));
+                if (hitObject != light)
+                    continue;
 
-                    break;
+                const Vec3 Le        = lightInfo.color * lightInfo.intensity;
+                f32        misWeight = 1.0f;
+
+                if (depth > 0) {
+                    const Vec3 wi  = hitResult.hitPoint - rayPayload.ray.origin;
+                    const f32  cos = Math::abs(Vec3::dot(hitResult.normal, -rayPayload.ray.direction));
+
+                    if (cos <= 0.0f)
+                        misWeight = 0.0f;
+
+                    else {
+                        const f32 lightPdfArea  = lightInfo.pdf(*light);
+                        const f32 lightPdfSolid = (lightPdfArea * wi.lengthSquare()) / cos;
+                        misWeight = sampling::powerHeuristic(rayPayload.prevPDF, lightPdfSolid);
+                    }
                 }
+
+                rayPayload.radiance += (rayPayload.throughput * Le * misWeight);
+                break;
             }
 
             if (!material)
@@ -67,7 +83,7 @@ namespace integrator {
                 wiLight /= wiLength;
 
                 f32 cosSurface      = Vec3::dot(hitResult.normal  ,  wiLight);
-                f32 cosLightSurface = Vec3::dot(lightSample.normal, -wiLight);
+                f32 cosLightSurface = Math::abs(Vec3::dot(lightSample.normal, -wiLight));
 
                 if ((cosSurface <= 0.0f) || (cosLightSurface <= 0.0f) || (lightSample.pdf <= 0.0f))
                     continue;

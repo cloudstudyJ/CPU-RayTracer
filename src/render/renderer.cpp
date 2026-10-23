@@ -9,7 +9,7 @@
 #include <thread>
 #include <atomic>
 
-constexpr Vec3 WORLD_Y = {0.0f, 1.0f, 0.0f};
+constexpr Vec3 WORLD_Y = { 0.0f, 1.0f, 0.0f };
 
 Renderer::RenderConfig getRenderConfig(const char* file) {
     jsonDocument doc = JsonParser::getDocument(file);

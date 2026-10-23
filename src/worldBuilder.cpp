@@ -25,6 +25,15 @@ Light::SampleFn getLightSampler(const Object& obj) noexcept {
 
     return nullptr;
 }
+Light::PDFFn getLightSurfacePDF(const Object& obj) noexcept {
+    if (dynamic_cast<const Sphere*>(&obj))
+        return lightSurfacePDF<Sphere>;
+
+    if (dynamic_cast<const Rectangle*>(&obj))
+        return lightSurfacePDF<Rectangle>;
+
+    return nullptr;
+}
 
 namespace WorldBuilder {
     void buildMaterial(BuildContext& ctx, const MaterialDesc& desc) {
@@ -71,7 +80,8 @@ namespace WorldBuilder {
             {
                 .color     = desc.color,
                 .intensity = desc.intensity,
-                .sample    = getLightSampler(*it->second)
+                .sample    = getLightSampler(*it->second),
+                .pdf       = getLightSurfacePDF(*it->second)
             }
         );
     }
