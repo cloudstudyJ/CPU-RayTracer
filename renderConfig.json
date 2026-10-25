@@ -1,9 +1,9 @@
 {
     "Renderer": {
-        "Resolution": [600, 600],
+        "Resolution": [1000, 1000],
         "Sampling"  : {
-            "SamplesPerPixel": 200,
-            "MaxRayDepth"    : 8
+            "SamplesPerPixel": 1000,
+            "MaxRayDepth"    : 6
         }
     }
 }

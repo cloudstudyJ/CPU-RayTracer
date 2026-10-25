@@ -2,27 +2,34 @@
 #include "render/renderer.hpp"
 
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <chrono>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb/stb_image_write.h"
 
 std::chrono::steady_clock::time_point start, end;
 
 Vec3 gammaCorrection(const Vec3& linearColor) {
     return {
-        .data = {
-            ((linearColor.x > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.x)) : 0.0f),
-            ((linearColor.y > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.y)) : 0.0f),
-            ((linearColor.z > 0.0f) ? Math::sqrt(Utility::max(0.0f, linearColor.z)) : 0.0f)
-        }
+        Math::sqrt(Utility::clamp(linearColor.r, 0.0f, 1.0f)),
+        Math::sqrt(Utility::clamp(linearColor.g, 0.0f, 1.0f)),
+        Math::sqrt(Utility::clamp(linearColor.b, 0.0f, 1.0f))
     };
 }
 
+bool saveScreenshot(const auto& renderConfig, const std::vector<byte>& snapshot, const char* filename) {
+    const i32 w = static_cast<i32>(renderConfig.imgW);
+    const i32 h = static_cast<i32>(renderConfig.imgH);
+
+    return stbi_write_png(filename, w, h, 3, snapshot.data(), w * 3) != 0;
+}
+
 int main() {
-    Renderer renderer("../../renderConfig.json");
+    Renderer renderer("./renderConfig.json");
     const auto renderConfig = renderer.renderConfig();
 
-    World world = std::move(WorldBuilder::buildWorld("../../resources/worlds/cornellbox.json"));
+    World world = std::move(WorldBuilder::buildWorld("./resources/worlds/cornellbox.json"));
 
     start = std::chrono::steady_clock::now();
     renderer.render(world);
@@ -34,21 +41,12 @@ int main() {
 
     for (auto color: frameBuffer) {
         color = gammaCorrection(color);
-        color.r = Utility::clamp(color.x, 0.0f, 1.0f);
-        color.g = Utility::clamp(color.y, 0.0f, 1.0f);
-        color.b = Utility::clamp(color.z, 0.0f, 1.0f);
 
         snapshot.push_back(static_cast<byte>(255.999f * color.r));
         snapshot.push_back(static_cast<byte>(255.999f * color.g));
         snapshot.push_back(static_cast<byte>(255.999f * color.b));
     }
-
-    std::ofstream writer("result.ppm", std::ios::binary);
-
-    writer << "P6\n";
-    writer << renderConfig.imgW << ' ' << renderConfig.imgH << '\n';
-    writer << "255\n";
-    writer.write(reinterpret_cast<const char*>(snapshot.data()), snapshot.size());
+    saveScreenshot(renderConfig, snapshot, "result.png");
 
     std::cout << "Threads: " << renderConfig.threads << '\n';
     std::cout << "Resolution: " << renderConfig.imgW << 'x' << renderConfig.imgH << '\n';
