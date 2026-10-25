@@ -10,14 +10,12 @@ namespace {
     }();
 }
 
-Image::Image(u32 width, u32 height, byte channels)
-    : mWidth(width), mHeight(height), mChannels(channels), mData(new byte[width * height * channels]{}) {}
 Image::~Image() noexcept { stbi_image_free(mData); }
 
 bool Image::load(const char* file) {
     {
         i32 x, y, _;
-        mData = stbi_load(file, &x, &y, &_, 3);
+        mData = stbi_load(file, &x, &y, &_, 4);
 
         if (!mData)
             return false;
@@ -30,12 +28,12 @@ bool Image::load(const char* file) {
 }
 
 Vec3 Image::color(const u32 x, const u32 y) const noexcept {
-    constexpr f32 INV_255{1.0f / 255};
+    constexpr f32 INV_255 = 1.0f / 255;
 
     if (!mData || (x >= mWidth) || (y >= mHeight))
-        return {1.0f, 0.0f, 1.0f};
+        return { 1.0f, 0.0f, 1.0f };
 
-    const u32 idx = (y * mWidth + x) * 3;
+    const u32 idx = (y * mWidth + x) * 4;
 
     return {
         static_cast<f32>(mData[idx    ]) * INV_255,

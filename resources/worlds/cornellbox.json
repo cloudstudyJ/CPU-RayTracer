@@ -28,6 +28,25 @@
                 "Type" : "Solid",
                 "Color": [0.73, 0.73, 0.73]
             }
+        },
+        {
+            "Name"   : "Cube_Back",
+            "BxDF"   : {
+                "Type"     : "Metal",
+                "Roughness": 0.15
+            },
+            "Texture": {
+                "Type" : "Solid",
+                "Color": [0.2, 0.8, 0.8]
+            }
+        },
+        {
+            "Name"   : "Cube_Front",
+            "BxDF"   : { "Type": "Lambertian" },
+            "Texture": {
+                "Type": "Image",
+                "File": "./resources/textures/interior_tiles_2k/interior_tiles_diff_2k.jpg"
+            }
         }
     ],
     "Objects": [
@@ -107,7 +126,7 @@
                 },
                 "Scale"   : [0.6, 1.2, 0.6]
             },
-            "Material": "Wall_White"
+            "Material": "Cube_Back"
         },
         {
             "Name"     : "Cube_Front",
@@ -120,7 +139,7 @@
                 },
                 "Scale"   : [0.6, 0.6, 0.6]
             },
-            "Material": "Wall_White"
+            "Material": "Cube_Front"
         },
         {
             "Name"     : "CeilLight",
@@ -133,13 +152,33 @@
                 },
                 "Scale"   : [0.45, 0.45, 1.0]
             }
+        },
+        {
+            "Name"     : "BackgroundLight",
+            "Geometry" : {
+                "Type"  : "Sphere",
+                "Radius": 0.5
+            },
+            "Transform": {
+                "Position": [0.0, 0.0, 4.5],
+                "Rotation": {
+                    "Axis" : [0.0, 0.0, 0.0],
+                    "Angle": 0.0
+                },
+                "Scale"   : [1.0, 1.0, 1.0]
+            }
         }
     ],
     "Lights": [
         {
             "Object"   : "CeilLight",
             "Color"    : [1.0, 1.0, 1.0],
-            "Intensity": 15.0
+            "Intensity": 30.0
+        },
+        {
+            "Object"   : "BackgroundLight",
+            "Color"    : [1.0, 1.0, 1.0],
+            "Intensity": 30.0
         }
     ]
 }

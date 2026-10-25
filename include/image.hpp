@@ -3,9 +3,13 @@
 #include "math/vec3.hpp"
 
 class Image {
+    Image(const Image&)                = delete;
+    Image(Image&&) noexcept            = delete;
+    Image& operator=(const Image&)     = delete;
+    Image& operator=(Image&&) noexcept = delete;
+
     public:
         Image() noexcept = default;
-        Image(u32 width, u32 height, byte channels);
         ~Image() noexcept;
 
         bool load(const char* file);
@@ -17,7 +21,7 @@ class Image {
         u32 height() const noexcept { return mHeight; }
 
     private:
-        byte mChannels{};
+        byte mChannels{ 4 };
         u32  mWidth   {};
         u32  mHeight  {};
 
