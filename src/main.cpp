@@ -8,7 +8,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
-std::chrono::steady_clock::time_point start, end;
+using Clock = std::chrono::steady_clock;
+
+Clock::time_point start, end;
 
 Vec3 gammaCorrection(const Vec3& linearColor) {
     return {
@@ -18,11 +20,12 @@ Vec3 gammaCorrection(const Vec3& linearColor) {
     };
 }
 
-bool saveScreenshot(const auto& renderConfig, const std::vector<byte>& snapshot, const char* filename) {
+void saveScreenshot(const auto& renderConfig, const std::vector<byte>& snapshot, const char* filename) {
     const i32 w = static_cast<i32>(renderConfig.imgW);
     const i32 h = static_cast<i32>(renderConfig.imgH);
 
-    return stbi_write_png(filename, w, h, 3, snapshot.data(), w * 3) != 0;
+    if (stbi_write_png(filename, w, h, 3, snapshot.data(), w * 3) == 0)
+        std::cout << "Failed to save screenshot!\n";
 }
 
 int main() {
@@ -31,9 +34,9 @@ int main() {
 
     World world = std::move(WorldBuilder::buildWorld("./resources/worlds/cornellbox.json"));
 
-    start = std::chrono::steady_clock::now();
+    start = Clock::now();
     renderer.render(world);
-    end = std::chrono::steady_clock::now();
+    end = Clock::now();
 
     const auto& frameBuffer = renderer.frameBuffer();
     std::vector<byte> snapshot;
