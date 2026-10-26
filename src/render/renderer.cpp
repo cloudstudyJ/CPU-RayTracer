@@ -55,13 +55,13 @@ Viewport getViewport(const Camera& camera, const f32 imgW, const f32 imgH) noexc
     };
 }
 
-Renderer::Renderer(const char* renderConfigPath) noexcept
+Renderer::Renderer(const char* renderConfigPath)
     : mConfig(getRenderConfig(renderConfigPath))
     , mIntegrator(mConfig.maxRayDepth) {
     mFrameBuffer.resize(mConfig.imgW * mConfig.imgH);
 }
 
-void Renderer::render(const World& world) noexcept {
+void Renderer::render(const World& world) {
     std::vector<std::thread> threads;
     threads.reserve(mConfig.threads);
 

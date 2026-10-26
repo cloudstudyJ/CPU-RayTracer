@@ -31,10 +31,10 @@ class Renderer {
         };
 
     public:
-        explicit Renderer(const char* renderConfigPath) noexcept;
+        explicit Renderer(const char* renderConfigPath);
         ~Renderer() noexcept = default;
 
-        void render(const World& world) noexcept;
+        void render(const World& world);
 
         const RenderConfig      renderConfig() const noexcept;
         const std::vector<Vec3> frameBuffer() const noexcept;
