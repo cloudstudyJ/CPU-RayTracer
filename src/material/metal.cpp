@@ -8,11 +8,11 @@ Metal::Metal(std::shared_ptr<Texture> texture, const f32 roughness) noexcept
     , mTexture(std::move(texture)) { }
 
 Vec3 Metal::evaluate(const HitResult& hitResult, const Vec3& wo, const Vec3& wi) const {
-    return GGXReflection(mTexture->color(hitResult.u, hitResult.v), mRoughness).f(wo, wi);
+    return GGXReflection(mTexture->sample(hitResult.uv), mRoughness).f(wo, wi);
 }
 f32 Metal::pdf(const HitResult& hitResult, const Vec3& wo, const Vec3& wi) const {
-    return GGXReflection(mTexture->color(hitResult.u, hitResult.v), mRoughness).pdf(wo, wi);
+    return GGXReflection(mTexture->sample(hitResult.uv), mRoughness).pdf(wo, wi);
 }
 BxDFSample Metal::sample(const HitResult& hitResult, const Vec3& wo) const {
-    return GGXReflection(mTexture->color(hitResult.u, hitResult.v), mRoughness).sample(wo);
+    return GGXReflection(mTexture->sample(hitResult.uv), mRoughness).sample(wo);
 }

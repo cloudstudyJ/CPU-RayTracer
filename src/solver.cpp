@@ -40,8 +40,10 @@ HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, 
         .isHit               = true,
         .isRayOppositeNormal = isRayOppositeNormal,
         .hitT                = t,
-        .u                   = phi * Math::INV_TWO_PI,
-        .v                   = Math::arccos(-outN.y) * Math::INV_PI,
+        .uv                  = {
+            .u = phi * Math::INV_TWO_PI,
+            .v = Math::arccos(-outN.y) * Math::INV_PI
+        },
         .hitPoint            = hitP,
         .normal              = (isRayOppositeNormal ? outN : -outN),
         .object              = &sphere
@@ -79,8 +81,10 @@ HitResult Solver::hitTest(const Ray& ray, const Rectangle& rect, const f32 tMin,
         .isHit               = true,
         .isRayOppositeNormal = isRayOppositeNormal,
         .hitT                = t,
-        .u                   = a + 0.5f,
-        .v                   = b + 0.5f,
+        .uv                  = {
+            .u = a + 0.5f,
+            .v = b + 0.5f
+        },
         .hitPoint            = hitP,
         .normal              = (isRayOppositeNormal ? outN : -outN),
         .object              = &rect

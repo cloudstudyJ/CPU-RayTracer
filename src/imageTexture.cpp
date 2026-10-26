@@ -1,9 +1,13 @@
 #include "imageTexture.hpp"
 #include "image.hpp"
 
-Vec3 ImageTexture::color(const f32 u, const f32 v) const noexcept {
+ImageTexture::ImageTexture(std::shared_ptr<Image> image) noexcept
+    : Texture()
+    , mImage(std::move(image)) { }
+
+Vec3 ImageTexture::sample(const Vec2& uv) const noexcept {
     return mImage->color(
-        u * (mImage->width() - 1),
-        v * (mImage->height() - 1)
+        uv.u * (mImage->width() - 1),
+        uv.v * (mImage->height() - 1)
     );
 }

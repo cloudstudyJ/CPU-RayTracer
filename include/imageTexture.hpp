@@ -8,11 +8,17 @@
 class Image;
 
 class ImageTexture: public Texture {
-    public:
-        ImageTexture() noexcept: mImage(nullptr) {}
-        ImageTexture(std::shared_ptr<Image> image) noexcept: mImage(std::move(image)) {}
+    ImageTexture(const ImageTexture&)                = delete;
+    ImageTexture(ImageTexture&&) noexcept            = delete;
+    ImageTexture& operator=(const ImageTexture&)     = delete;
+    ImageTexture& operator=(ImageTexture&&) noexcept = delete;
 
-        Vec3 color(const f32 u, const f32 v) const noexcept override;
+    public:
+        ImageTexture() noexcept = default;
+        explicit ImageTexture(std::shared_ptr<Image> image) noexcept;
+        ~ImageTexture() noexcept override = default;
+
+        Vec3 sample(const Vec2& uv) const noexcept override;
 
     private:
         std::shared_ptr<Image> mImage;
