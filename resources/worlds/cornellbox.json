@@ -160,7 +160,7 @@
                 "Radius": 0.5
             },
             "Transform": {
-                "Position": [0.0, 0.0, 4.5],
+                "Position": [1.0, 0.0, 4.5],
                 "Rotation": {
                     "Axis" : [0.0, 0.0, 0.0],
                     "Angle": 0.0
@@ -173,12 +173,12 @@
         {
             "Object"   : "CeilLight",
             "Color"    : [1.0, 1.0, 1.0],
-            "Intensity": 30.0
+            "Intensity": 20.0
         },
         {
             "Object"   : "BackgroundLight",
             "Color"    : [1.0, 1.0, 1.0],
-            "Intensity": 30.0
+            "Intensity": 10.0
         }
     ]
 }

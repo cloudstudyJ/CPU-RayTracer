@@ -2,7 +2,7 @@
     "Renderer": {
         "Resolution": [1000, 1000],
         "Sampling"  : {
-            "SamplesPerPixel": 1000,
+            "SamplesPerPixel": 4000,
             "MaxRayDepth"    : 6
         }
     }

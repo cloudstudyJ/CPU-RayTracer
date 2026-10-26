@@ -11,7 +11,7 @@ namespace sampling {
         return {
             r * Math::cos(phi),
             r * Math::sin(phi),
-            Math::sqrt(Utility::max(1.0f, 1 - uv.v))
+            Math::sqrt(Utility::max(0.0f, 1 - uv.v))
         };
     }
 }

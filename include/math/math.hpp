@@ -7,8 +7,8 @@ namespace Math {
     constexpr f32 TWO_PI      = 2 * PI;
     constexpr f32 FOUR_PI     = 4 * PI;
     constexpr f32 INV_PI      = 1 / PI;
-    constexpr f32 INV_TWO_PI  = 2 / PI;
-    constexpr f32 INV_FOUR_PI = 4 / PI;
+    constexpr f32 INV_TWO_PI  = 1 / TWO_PI;
+    constexpr f32 INV_FOUR_PI = 1 / FOUR_PI;
 
     constexpr f32 toRad(const f32 degree) noexcept;
     constexpr f32 toDegree(const f32 rad) noexcept;

@@ -31,13 +31,14 @@ An offline renderer written in C++, implementing Monte Carlo path tracing.
 ## **Result**
 #### **Render Configuration**
 - Resolution = 1000x1000
-- SPP = 1000
+- SPP = 4000
 - Max Ray Depth = 6
 
 #### **GGX Roughness Comparison**
 <p>
   <img src="result/roughness.png"/>
 </p>
+Average Render Time: 1032.004 [s] (17m 12s)
 
 ## **Configuration**
 ### **Rendering**

@@ -10,7 +10,7 @@ namespace microfacet {
         if (cosSQ <= 0.0f)
             return INF_F32;
 
-        return 0.5f * (Math::sqrt(1 + alpha * alpha * (Utility::max(1.0f, 1 - cosSQ) / cosSQ)) - 1);
+        return 0.5f * (Math::sqrt(1 + alpha * alpha * (Utility::max(0.0f, 1 - cosSQ) / cosSQ)) - 1);
     }
     f32 ggxSmithG1(const Vec3& w, const f32 alpha) noexcept {
         if (w.z <= 0.0f)
@@ -31,9 +31,9 @@ namespace microfacet {
             return {};
 
         const f32 alphaSQ = alpha * alpha;
-        const f32 denom   = (half.z * half.z) * (alphaSQ - 1) + 1;
+        const f32 denom   = 1 / ((half.z * half.z) * (alphaSQ - 1) + 1);
 
-        return (alphaSQ * Math::INV_PI * (denom * denom));
+        return alphaSQ * Math::INV_PI * (denom * denom);
     }
     // Isotropic
     Vec3 ggxVNDF(const Vec3& wo, Vec2 uv, const f32 alpha) noexcept {

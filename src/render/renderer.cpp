@@ -119,7 +119,7 @@ Vec3 Renderer::renderPixel(const World& world, const Camera& camera, const Viewp
             f32 offsetY = y + ((sampleY + sampling::uniform()) * INV_SQRT_SPP);
 
             Vec3 samplePos  = viewport.lt + (viewport.du * offsetX) + (viewport.dv * offsetY);
-            Ray  ray        = { camera.position, samplePos - camera.position };
+            Ray  ray        = { camera.position, (samplePos - camera.position).normalized() };
             radiance       += mIntegrator.Li(world, ray);
         }
     }
