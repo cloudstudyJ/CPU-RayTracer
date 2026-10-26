@@ -27,26 +27,30 @@ HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, 
     if (t0 > tMax || t1 < tMin)
         return {};
 
-    f32  t                   = ((t0 >= tMin) ? t0 : t1);
-    Vec3 hitP                = ray.at(t);
-    Vec3 outN                = (hitP - spherePos) / radius;
-    bool isRayOppositeNormal = (Vec3::dot(ray.direction, outN) < 0.0f);
+    f32  t = ((t0 >= tMin) ? t0 : t1);
+
+    if (t > tMax)
+        return {};
+
+    Vec3 hitP        = ray.at(t);
+    Vec3 outN        = (hitP - spherePos) / radius;
+    bool isFrontFace = (Vec3::dot(ray.direction, outN) < 0.0f);
 
     f32 phi = Math::arctan2(-outN.z, outN.x);
     if (phi < 0.0f)
         phi += Math::TWO_PI;
 
     HitResult hitResult {
-        .isHit               = true,
-        .isRayOppositeNormal = isRayOppositeNormal,
-        .hitT                = t,
-        .uv                  = {
+        .isHit       = true,
+        .isFrontFace = isFrontFace,
+        .hitT        = t,
+        .uv          = {
             .u = phi * Math::INV_TWO_PI,
             .v = Math::arccos(-outN.y) * Math::INV_PI
         },
-        .hitPoint            = hitP,
-        .normal              = (isRayOppositeNormal ? outN : -outN),
-        .object              = &sphere
+        .hitPoint    = hitP,
+        .normal      = (isFrontFace ? outN : -outN),
+        .object      = &sphere
     };
 
     return hitResult;
@@ -74,20 +78,20 @@ HitResult Solver::hitTest(const Ray& ray, const Rectangle& rect, const f32 tMin,
     if ((a < -0.5f) || (a > 0.5f) || (b < -0.5f) || (b > 0.5f))
         return {};
 
-    Vec3 outN                = n.normalized();
-    bool isRayOppositeNormal = (Vec3::dot(ray.direction, outN) < 0.0f);
+    Vec3 outN        = n.normalized();
+    bool isFrontFace = (Vec3::dot(ray.direction, outN) < 0.0f);
 
     HitResult hitResult {
-        .isHit               = true,
-        .isRayOppositeNormal = isRayOppositeNormal,
-        .hitT                = t,
-        .uv                  = {
+        .isHit       = true,
+        .isFrontFace = isFrontFace,
+        .hitT        = t,
+        .uv          = {
             .u = a + 0.5f,
             .v = b + 0.5f
         },
-        .hitPoint            = hitP,
-        .normal              = (isRayOppositeNormal ? outN : -outN),
-        .object              = &rect
+        .hitPoint    = hitP,
+        .normal      = (isFrontFace ? outN : -outN),
+        .object      = &rect
     };
 
     return hitResult;
