@@ -14,11 +14,11 @@ enum class BxDFType: byte {
     Dielectric = 0x03,
     Unknown    = 0xFF
 };
-enum class TextureType: byte {
-    None    = 0x00,
-    Solid   = 0x01,
-    Image   = 0x02,
-    Unknown = 0xFF
+enum class TextureData: byte {
+    None     = 0x00,
+    Constant = 0x01,
+    Image    = 0x02,
+    Unknown  = 0xFF
 };
 enum class GeometryType: byte {
     None      = 0x00,
@@ -36,10 +36,10 @@ struct ImageTextureDesc { std::string file;  };
 
 struct MaterialDesc {
     BxDFType    bxdfType;
-    TextureType textureType;
+    TextureData textureData;
 
-    std::variant<MetalDesc, DielectricDesc>          bxdfData;
-    std::variant<SolidTextureDesc, ImageTextureDesc> textureData;
+    std::variant<MetalDesc, DielectricDesc>          bxdfDesc;
+    std::variant<SolidTextureDesc, ImageTextureDesc> textureDesc;
 
     std::string name;
 };

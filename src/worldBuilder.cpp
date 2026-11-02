@@ -43,11 +43,11 @@ namespace WorldBuilder {
         std::shared_ptr<Texture>  texture;
         std::shared_ptr<Material> material;
 
-        if (desc.textureType == TextureType::Solid)
-            texture = std::make_shared<SolidTexture>(std::get<SolidTextureDesc>(desc.textureData).color);
+        if (desc.textureData == TextureData::Constant)
+            texture = std::make_shared<SolidTexture>(std::get<SolidTextureDesc>(desc.textureDesc).color);
 
-        else if (desc.textureType == TextureType::Image) {
-            const auto& imgFile = std::get<ImageTextureDesc>(desc.textureData).file;
+        else if (desc.textureData == TextureData::Image) {
+            const auto& imgFile = std::get<ImageTextureDesc>(desc.textureDesc).file;
             auto        image   = std::make_shared<Image>();
 
             if (!image->load(imgFile.c_str())) {
@@ -62,7 +62,7 @@ namespace WorldBuilder {
             material = std::make_shared<Diffuse>(texture);
 
         else if (desc.bxdfType == BxDFType::Metal)
-            material = std::make_shared<Metal>(texture, std::get<MetalDesc>(desc.bxdfData).roughness);
+            material = std::make_shared<Metal>(texture, std::get<MetalDesc>(desc.bxdfDesc).roughness);
 
         /* else if (desc.bxdfType == BxDFType::Dielectric)
             material = std::make_shared<Dielectric>(); */
