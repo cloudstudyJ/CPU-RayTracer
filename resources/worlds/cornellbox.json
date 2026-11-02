@@ -8,26 +8,35 @@
         {
             "Name"   : "Wall_Green",
             "BxDF"   : { "Type": "Lambertian" },
-            "Texture": {
-                "Type" : "Constant",
-                "Color": [0.12, 0.45, 0.15]
-            }
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Constant",
+                    "Color" : [0.12, 0.45, 0.15]
+                }
+            ]
         },
         {
             "Name"   : "Wall_Red",
             "BxDF"   : { "Type": "Lambertian" },
-            "Texture": {
-                "Type" : "Constant",
-                "Color": [0.65, 0.05, 0.05]
-            }
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Constant",
+                    "Color" : [0.65, 0.05, 0.05]
+                }
+            ]
         },
         {
             "Name"   : "Wall_White",
             "BxDF"   : { "Type": "Lambertian" },
-            "Texture": {
-                "Type" : "Constant",
-                "Color": [0.73, 0.73, 0.73]
-            }
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Constant",
+                    "Color" : [0.73, 0.73, 0.73]
+                }
+            ]
         },
         {
             "Name"   : "Cube_Back",
@@ -35,18 +44,24 @@
                 "Type"     : "Metal",
                 "Roughness": 0.15
             },
-            "Texture": {
-                "Type" : "Constant",
-                "Color": [0.2, 0.8, 0.8]
-            }
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Constant",
+                    "Color" : [0.2, 0.8, 0.8]
+                }
+            ]
         },
         {
             "Name"   : "Cube_Front",
             "BxDF"   : { "Type": "Lambertian" },
-            "Texture": {
-                "Type": "Image",
-                "File": "./resources/textures/interior_tiles_2k/interior_tiles_diff_2k.jpg"
-            }
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/interior_tiles_2k/interior_tiles_diff_2k.jpg"
+                }
+            ]
         }
     ],
     "Objects": [

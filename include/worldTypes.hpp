@@ -14,11 +14,18 @@ enum class BxDFType: byte {
     Dielectric = 0x03,
     Unknown    = 0xFF
 };
-enum class TextureData: byte {
+enum class TextureSource: byte {
     None     = 0x00,
     Constant = 0x01,
     Image    = 0x02,
     Unknown  = 0xFF
+};
+enum class TextureType: byte {
+    None      = 0x00,
+    BaseColor = 0x01,
+    Normal    = 0x02,
+    ORM       = 0x03,   // Occlusion + Roughness + Metallic
+    Unknown   = 0xFF
 };
 enum class GeometryType: byte {
     None      = 0x00,
@@ -31,15 +38,20 @@ enum class GeometryType: byte {
 struct MetalDesc      { f32 roughness      {}; };
 struct DielectricDesc { f32 refractiveIndex{}; };
 
-struct SolidTextureDesc { Vec3        color; };
+struct ConstantTextureDesc { Vec3        color; };
 struct ImageTextureDesc { std::string file;  };
+struct TextureDesc {
+    TextureType   type;
+    TextureSource src;
+
+    std::variant<ConstantTextureDesc, ImageTextureDesc> data;
+};
 
 struct MaterialDesc {
-    BxDFType    bxdfType;
-    TextureData textureData;
+    BxDFType bxdfType;
 
-    std::variant<MetalDesc, DielectricDesc>          bxdfDesc;
-    std::variant<SolidTextureDesc, ImageTextureDesc> textureDesc;
+    std::variant<MetalDesc, DielectricDesc> bxdfDesc;
+    std::vector<TextureDesc>                textures;
 
     std::string name;
 };

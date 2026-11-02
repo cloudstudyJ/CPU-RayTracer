@@ -43,19 +43,21 @@ namespace WorldBuilder {
         std::shared_ptr<Texture>  texture;
         std::shared_ptr<Material> material;
 
-        if (desc.textureData == TextureData::Constant)
-            texture = std::make_shared<SolidTexture>(std::get<SolidTextureDesc>(desc.textureDesc).color);
+        for (const auto& texDesc: desc.textures) {
+            if (texDesc.src == TextureSource::Constant)
+                texture = std::make_shared<SolidTexture>(std::get<ConstantTextureDesc>(texDesc.data).color);
 
-        else if (desc.textureData == TextureData::Image) {
-            const auto& imgFile = std::get<ImageTextureDesc>(desc.textureDesc).file;
-            auto        image   = std::make_shared<Image>();
+            else if (texDesc.src == TextureSource::Image) {
+                const auto& imgFile = std::get<ImageTextureDesc>(texDesc.data).file;
+                auto        image   = std::make_shared<Image>();
 
-            if (!image->load(imgFile.c_str())) {
-                std::cout << "Failed to load Texture Image: " << imgFile << '\n';
-                return;
+                if (!image->load(imgFile.c_str())) {
+                    std::cout << "Failed to load Texture Image: " << imgFile << '\n';
+                    return;
+                }
+
+                texture = std::make_shared<ImageTexture>(std::move(image));
             }
-
-            texture = std::make_shared<ImageTexture>(std::move(image));
         }
 
         if (desc.bxdfType == BxDFType::Lambertian)
