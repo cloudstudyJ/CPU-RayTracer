@@ -17,9 +17,11 @@ An offline renderer written in C++, implementing Monte Carlo path tracing.
   - Schlick Fresnel approximation
 
 ### **Textures**
-- Solid color
+- Constant color
 - Image
-  - Diffuse albedo
+  - Diffuse
+  - Normal
+  - Roughness
 
 ### **Geometry**
 - Sphere, rectangle, and cube
@@ -63,9 +65,45 @@ The default world configuration is located in the `resources/worlds` directory.
 
 The world is defined in JSON and contains the following components:
 - Camera
+  - Position (vec3)
+  - Look (vec3)
+  - FovY (float)
 - Materials
+  - Name (string)
+  - BxDF
+    - Type (string)
+      1. "Lambertian"
+      2. "Metal"
+    - Roughness (float)
+  - Textures
+    - Type (string)
+      1. "BaseColor"
+      2. "Normal"
+      3. "ORM"
+    - Source (string)
+      1. "Constant"
+      2. "Image"
+    - Color (vec3)
+    - File (string)
 - Objects
+  - Name (string)
+  - Geometry
+    - Type (string)
+      1. "Sphere"
+      2. "Rectangle"
+      3. "Cube"
+    - Radius (float)
+  - Transform
+    - Position (vec3)
+    - Rotation
+      - Axis (vec3)
+      - Angle (float)
+    - Scale (vec3)
+  - Material (string)
 - Lights
+  - Object (string)
+  - Color (vec3)
+  - Intensity (float)
 
 ## **Third-Party Libraries**
 1. [Image — stb](https://github.com/nothings/stb)
