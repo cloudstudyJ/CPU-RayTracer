@@ -39,16 +39,45 @@
             ]
         },
         {
-            "Name"   : "Cube_Back",
+            "Name"   : "Metal_Plate",
             "BxDF"   : {
                 "Type"     : "Metal",
-                "Roughness": 0.35
+                "Roughness": 0.5
+            },
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/metal_plate_2k/metal_plate_diff_2k.jpg"
+                },
+                {
+                    "Type"  : "Normal",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/metal_plate_2k/metal_plate_nor_gl_2k.jpg"
+                },
+                {
+                    "Type"  : "ORM",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/metal_plate_2k/metal_plate_rough_2k.jpg"
+                }
+            ]
+        },
+        {
+            "Name"   : "Metal_Plate_02",
+            "BxDF"   : {
+                "Type"     : "Metal",
+                "Roughness": 0.67
             },
             "Textures": [
                 {
                     "Type"  : "BaseColor",
                     "Source": "Image",
                     "File"  : "./resources/textures/metal_plate_02_2k/metal_plate_02_diff_2k.jpg"
+                },
+                {
+                    "Type"  : "Normal",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/metal_plate_02_2k/metal_plate_02_nor_gl_2k.jpg"
                 },
                 {
                     "Type"  : "ORM",
@@ -58,13 +87,18 @@
             ]
         },
         {
-            "Name"   : "Cube_Front",
+            "Name"   : "Japanese_Stone_Wall",
             "BxDF"   : { "Type": "Lambertian" },
             "Textures": [
                 {
                     "Type"  : "BaseColor",
                     "Source": "Image",
-                    "File"  : "./resources/textures/interior_tiles_2k/interior_tiles_diff_2k.jpg"
+                    "File"  : "./resources/textures/japanese_stone_wall_2k/japanese_stone_wall_diff_2k.jpg"
+                },
+                {
+                    "Type"  : "Normal",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/japanese_stone_wall_2k/japanese_stone_wall_nor_gl_2k.jpg"
                 }
             ]
         }
@@ -94,7 +128,7 @@
                 },
                 "Scale"   : [2.0, 2.0, 1.0]
             },
-            "Material": "Wall_Red"
+            "Material": "Metal_Plate"
         },
         {
             "Name"     : "CornellBox_Ceil",
@@ -120,7 +154,7 @@
                 },
                 "Scale"   : [2.0, 2.0, 1.0]
             },
-            "Material": "Wall_White"
+            "Material": "Metal_Plate_02"
         },
         {
             "Name"     : "CornellBox_Back",
@@ -146,7 +180,7 @@
                 },
                 "Scale"   : [0.6, 1.2, 0.6]
             },
-            "Material": "Cube_Back"
+            "Material": "Wall_Red"
         },
         {
             "Name"     : "Cube_Front",
@@ -159,7 +193,7 @@
                 },
                 "Scale"   : [0.6, 0.6, 0.6]
             },
-            "Material": "Cube_Front"
+            "Material": "Japanese_Stone_Wall"
         },
         {
             "Name"     : "CeilLight",

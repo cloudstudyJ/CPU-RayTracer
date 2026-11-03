@@ -65,7 +65,19 @@ namespace integrator {
             if (!material)
                 break;
 
-            const ONB  onb = ONB(hitResult.normal);
+            Vec3 normal = hitResult.normal;
+
+            if (material->hasNormalMap()) {
+                const Vec3 localN = material->normal(hitResult.uv);
+
+                normal = (
+                    hitResult.tangent   * localN.x +
+                    hitResult.bitangent * localN.y +
+                    hitResult.normal    * localN.z
+                ).normalized();
+            }
+
+            const ONB  onb = ONB(normal);
             const Vec3 wo  = onb.toLocal(-rayPayload.ray.direction);
 
             // Direct Estimation
@@ -82,10 +94,15 @@ namespace integrator {
 
                 wiLight /= wiLength;
 
-                f32 cosSurface      = Vec3::dot(hitResult.normal  ,  wiLight);
+                f32 cosGeometry = Vec3::dot(hitResult.normal, wiLight);
+                f32 cosSurface  = Vec3::dot(normal,  wiLight);
+
+                if ((cosGeometry <= 0.0f) || (cosSurface <= 0.0f))
+                    continue;
+
                 f32 cosLightSurface = Math::abs(Vec3::dot(lightSample.normal, -wiLight));
 
-                if ((cosSurface <= 0.0f) || (cosLightSurface <= 0.0f) || (lightSample.pdf <= 0.0f))
+                if ((lightSample.pdf <= 0.0f))
                     continue;
 
                 Ray shadowRay = { hitResult.hitPoint, wiLight };
@@ -104,12 +121,17 @@ namespace integrator {
             }
 
             // Next Estimation Ready
-            BxDFSample bxdfSample = material->sample(hitResult, wo);
+            const BxDFSample bxdfSample = material->sample(hitResult, wo);
 
             if (bxdfSample.pdf <= 0.0f)
                 break;
 
-            rayPayload.ray         = { hitResult.hitPoint, onb.toWorld(bxdfSample.wi) };
+            const Vec3 wiWorld = onb.toWorld(bxdfSample.wi);
+
+            if (Vec3::dot(hitResult.normal, wiWorld) <= 0.0f)
+                break;
+
+            rayPayload.ray         = { hitResult.hitPoint, wiWorld };
             rayPayload.throughput *= ((bxdfSample.f * Math::abs(bxdfSample.wi.z)) / bxdfSample.pdf);
             rayPayload.prevPDF     = bxdfSample.pdf;
         }

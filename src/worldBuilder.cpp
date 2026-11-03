@@ -61,8 +61,7 @@ std::shared_ptr<Texture> createTexture(const TextureDesc& desc) {
 
 namespace WorldBuilder {
     void buildMaterial(BuildContext& ctx, const MaterialDesc& desc) {
-        std::shared_ptr<Texture>  baseColor;
-        std::shared_ptr<Texture>  orm;
+        std::shared_ptr<Texture>  baseColor, normal, orm;
         std::shared_ptr<Material> material;
 
         for (const auto& texDesc: desc.textures) {
@@ -73,9 +72,9 @@ namespace WorldBuilder {
                     baseColor = std::move(texture);
                     break;
 
-                /* case TextureType::Normal:
-                    //
-                    break; */
+                case TextureType::Normal:
+                    normal = std::move(texture);
+                    break;
 
                 case TextureType::ORM:
                     orm = std::move(texture);
@@ -84,16 +83,16 @@ namespace WorldBuilder {
                 default:
                     break;
             }
-
-            if (!orm)
-                orm = std::make_shared<SolidTexture>(Vec3{ 1.0f, 1.0f, 1.0f });
         }
 
+        if (!orm)
+            orm = std::make_shared<SolidTexture>(Vec3{ 1.0f, 1.0f, 1.0f });
+
         if (desc.bxdfType == BxDFType::Lambertian)
-            material = std::make_shared<Diffuse>(baseColor);
+            material = std::make_shared<Diffuse>(baseColor, normal);
 
         else if (desc.bxdfType == BxDFType::Metal)
-            material = std::make_shared<Metal>(baseColor, orm, std::get<MetalDesc>(desc.bxdfDesc).roughness);
+            material = std::make_shared<Metal>(baseColor, normal, orm, std::get<MetalDesc>(desc.bxdfDesc).roughness);
 
         /* else if (desc.bxdfType == BxDFType::Dielectric)
             material = std::make_shared<Dielectric>(); */
