@@ -86,8 +86,12 @@ namespace integrator {
                     continue;
 
                 const SurfaceSample lightSample = lightInfo.sample(*light);
-                      Vec3          wiLight     = lightSample.point - hitResult.hitPoint;
-                const f32           wiLength    = wiLight.length();
+
+                if ((lightSample.pdf <= 0.0f))
+                    continue;
+
+                Vec3       wiLight  = lightSample.point - hitResult.hitPoint;
+                const f32  wiLength = wiLight.length();
 
                 if (wiLength <= RAY_T_MIN)
                     continue;
@@ -96,13 +100,9 @@ namespace integrator {
 
                 f32 cosGeometry = Vec3::dot(hitResult.normal, wiLight);
                 f32 cosSurface  = Vec3::dot(normal,  wiLight);
-
-                if ((cosGeometry <= 0.0f) || (cosSurface <= 0.0f))
-                    continue;
-
                 f32 cosLightSurface = Math::abs(Vec3::dot(lightSample.normal, -wiLight));
 
-                if ((lightSample.pdf <= 0.0f))
+                if ((cosGeometry <= 0.0f) || (cosSurface <= 0.0f) || (cosLightSurface <= 0.0f))
                     continue;
 
                 Ray shadowRay = { hitResult.hitPoint, wiLight };
