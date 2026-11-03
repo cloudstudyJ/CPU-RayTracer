@@ -15,12 +15,12 @@ Cube::Cube(const Transform& transform, std::shared_ptr<const Material> material)
     Vec3 v = Mw * Vec3{ .data = { 0.0f, 1.0f, 0.0f } };
     Vec3 w = Mw * Vec3{ .data = { 0.0f, 0.0f, 1.0f } };
 
-    mFaces[0] = Rectangle(c + w * 0.5f, u, v, material);    // front
-    mFaces[1] = Rectangle(c + u * 0.5f, v, w, material);    // right
-    mFaces[2] = Rectangle(c + v * 0.5f, w, u, material);    // top
-    mFaces[3] = Rectangle(c - u * 0.5f, w, v, material);    // left
-    mFaces[4] = Rectangle(c - v * 0.5f, u, w, material);    // bottom
-    mFaces[5] = Rectangle(c - w * 0.5f, v, u, material);    // back
+    mFaces[0] = Rectangle(c + w * 0.5f,  u, v, material);    // front
+    mFaces[1] = Rectangle(c + u * 0.5f, -w, v, material);    // right
+    mFaces[2] = Rectangle(c + v * 0.5f,  w, u, material);    // top
+    mFaces[3] = Rectangle(c - u * 0.5f,  w, v, material);    // left
+    mFaces[4] = Rectangle(c - v * 0.5f,  u, w, material);    // bottom
+    mFaces[5] = Rectangle(c - w * 0.5f, -u, v, material);    // back
 
     mAABB = mFaces[0].aabb();
     for (i32 i = 1; i < 6; ++i)
