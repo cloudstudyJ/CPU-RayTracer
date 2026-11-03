@@ -42,13 +42,18 @@
             "Name"   : "Cube_Back",
             "BxDF"   : {
                 "Type"     : "Metal",
-                "Roughness": 0.15
+                "Roughness": 0.35
             },
             "Textures": [
                 {
                     "Type"  : "BaseColor",
-                    "Source": "Constant",
-                    "Color" : [0.2, 0.8, 0.8]
+                    "Source": "Image",
+                    "File"  : "./resources/textures/metal_plate_02_2k/metal_plate_02_diff_2k.jpg"
+                },
+                {
+                    "Type"  : "ORM",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/metal_plate_02_2k/metal_plate_02_arm_2k.jpg"
                 }
             ]
         },

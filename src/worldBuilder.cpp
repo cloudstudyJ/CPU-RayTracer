@@ -38,33 +38,62 @@ Light::PDFFn getLightSurfacePDF(const Object& obj) noexcept {
     return nullptr;
 }
 
+std::shared_ptr<Texture> createTexture(const TextureDesc& desc) {
+    std::shared_ptr<Texture> texture;
+
+    if (desc.src == TextureSource::Constant)
+        return std::make_shared<SolidTexture>(std::get<ConstantTextureDesc>(desc.data).color);
+
+    else if (desc.src == TextureSource::Image) {
+        const auto& file = std::get<ImageTextureDesc>(desc.data).file;
+        auto        img  = std::make_shared<Image>();
+
+        if (!img->load(file.c_str())) {
+            std::cout << "Failed to load Texture Image: " << file << '\n';
+            return nullptr;
+        }
+
+        return std::make_shared<ImageTexture>(std::move(img));
+    }
+
+    return nullptr;
+}
+
 namespace WorldBuilder {
     void buildMaterial(BuildContext& ctx, const MaterialDesc& desc) {
-        std::shared_ptr<Texture>  texture;
+        std::shared_ptr<Texture>  baseColor;
+        std::shared_ptr<Texture>  orm;
         std::shared_ptr<Material> material;
 
         for (const auto& texDesc: desc.textures) {
-            if (texDesc.src == TextureSource::Constant)
-                texture = std::make_shared<SolidTexture>(std::get<ConstantTextureDesc>(texDesc.data).color);
+            std::shared_ptr<Texture> texture = createTexture(texDesc);
 
-            else if (texDesc.src == TextureSource::Image) {
-                const auto& imgFile = std::get<ImageTextureDesc>(texDesc.data).file;
-                auto        image   = std::make_shared<Image>();
+            switch (texDesc.type) {
+                case TextureType::BaseColor:
+                    baseColor = std::move(texture);
+                    break;
 
-                if (!image->load(imgFile.c_str())) {
-                    std::cout << "Failed to load Texture Image: " << imgFile << '\n';
-                    return;
-                }
+                /* case TextureType::Normal:
+                    //
+                    break; */
 
-                texture = std::make_shared<ImageTexture>(std::move(image));
+                case TextureType::ORM:
+                    orm = std::move(texture);
+                    break;
+
+                default:
+                    break;
             }
+
+            if (!orm)
+                orm = std::make_shared<SolidTexture>(Vec3{ 1.0f, 1.0f, 1.0f });
         }
 
         if (desc.bxdfType == BxDFType::Lambertian)
-            material = std::make_shared<Diffuse>(texture);
+            material = std::make_shared<Diffuse>(baseColor);
 
         else if (desc.bxdfType == BxDFType::Metal)
-            material = std::make_shared<Metal>(texture, std::get<MetalDesc>(desc.bxdfDesc).roughness);
+            material = std::make_shared<Metal>(baseColor, orm, std::get<MetalDesc>(desc.bxdfDesc).roughness);
 
         /* else if (desc.bxdfType == BxDFType::Dielectric)
             material = std::make_shared<Dielectric>(); */

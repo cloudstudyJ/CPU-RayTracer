@@ -15,14 +15,17 @@ class Metal: public Material {
     Metal& operator=(Metal&&) noexcept = delete;
 
     public:
-        explicit Metal(std::shared_ptr<Texture> texture, const f32 roughness) noexcept;
+        explicit Metal(std::shared_ptr<Texture> baseColor, std::shared_ptr<Texture> orm, const f32 roughness = 1.0f) noexcept;
         ~Metal() noexcept override = default;
 
         Vec3       evaluate(const HitResult& hitResult, const Vec3& wo, const Vec3& wi) const override;
         f32        pdf(const HitResult& hitResult, const Vec3& wo, const Vec3& wi) const override;
         BxDFSample sample(const HitResult& hitResult, const Vec3& wo) const override;
 
+        const f32 roughness(const Vec2& uv) const noexcept;
+
     private:
-        f32                      mRoughness{};
-        std::shared_ptr<Texture> mTexture;
+        f32                      mRoughness;
+        std::shared_ptr<Texture> mBaseColor;
+        std::shared_ptr<Texture> mORM;
 };
