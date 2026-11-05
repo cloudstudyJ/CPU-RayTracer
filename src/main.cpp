@@ -32,7 +32,7 @@ int main() {
     Renderer renderer("./renderConfig.json");
     const auto renderConfig = renderer.renderConfig();
 
-    World world = std::move(WorldBuilder::buildWorld("./resources/worlds/cornellbox.json"));
+    World world = WorldBuilder::buildWorld("./resources/worlds/cornellbox.json");
 
     start = Clock::now();
     renderer.render(world);

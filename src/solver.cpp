@@ -37,8 +37,12 @@ HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, 
     bool isFrontFace = (Vec3::dot(ray.direction, outN) < 0.0f);
 
     f32 phi = Math::arctan2(-outN.z, outN.x);
+
     if (phi < 0.0f)
         phi += Math::TWO_PI;
+
+    const Vec3 tangent   = { -Math::sin(phi), 0.0f, -Math::cos(phi) };
+    const Vec3 bitangent = Vec3::cross(outN, tangent);
 
     HitResult hitResult {
         .isHit       = true,
@@ -49,6 +53,8 @@ HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, 
             .v = Math::arccos(-outN.y) * Math::INV_PI
         },
         .hitPoint    = hitP,
+        .tangent     = tangent,
+        .bitangent   = (isFrontFace ? bitangent : -bitangent),
         .normal      = (isFrontFace ? outN : -outN),
         .object      = &sphere
     };
@@ -79,6 +85,7 @@ HitResult Solver::hitTest(const Ray& ray, const Rectangle& rect, const f32 tMin,
         return {};
 
     Vec3 outN        = n.normalized();
+    Vec3 bitangent   = v.normalized();
     bool isFrontFace = (Vec3::dot(ray.direction, outN) < 0.0f);
 
     HitResult hitResult {
@@ -90,6 +97,8 @@ HitResult Solver::hitTest(const Ray& ray, const Rectangle& rect, const f32 tMin,
             .v = b + 0.5f
         },
         .hitPoint    = hitP,
+        .tangent     = u.normalized(),
+        .bitangent   = (isFrontFace ? bitangent : -bitangent),
         .normal      = (isFrontFace ? outN : -outN),
         .object      = &rect
     };
