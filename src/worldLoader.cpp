@@ -87,8 +87,15 @@ namespace WorldLoader {
             desc.textures.push_back(std::move(texDesc));
         }
 
-        if      (desc.bxdfType == BxDFType::Metal     ) desc.bxdfDesc = MetalDesc{toF32(bxdf["Roughness"])};
-        else if (desc.bxdfType == BxDFType::Dielectric) desc.bxdfDesc = DielectricDesc{toF32(bxdf["RefractiveIndex"])};
+        if (desc.bxdfType == BxDFType::Metal) {
+            desc.bxdfDesc = MetalDesc{
+                .metallic  = toF32(bxdf["Metallic"]),
+                .roughness = toF32(bxdf["Roughness"])
+            };
+        }
+
+        else if (desc.bxdfType == BxDFType::Dielectric)
+            desc.bxdfDesc = DielectricDesc{toF32(bxdf["RefractiveIndex"])};
 
         return desc;
     }

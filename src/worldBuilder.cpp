@@ -92,7 +92,7 @@ namespace WorldBuilder {
             material = std::make_shared<Diffuse>(baseColor, normal);
 
         else if (desc.bxdfType == BxDFType::Metal)
-            material = std::make_shared<Metal>(baseColor, normal, orm, std::get<MetalDesc>(desc.bxdfDesc).roughness);
+            material = std::make_shared<Metal>(baseColor, normal, orm, std::get<MetalDesc>(desc.bxdfDesc).metallic, std::get<MetalDesc>(desc.bxdfDesc).roughness);
 
         /* else if (desc.bxdfType == BxDFType::Dielectric)
             material = std::make_shared<Dielectric>(); */
