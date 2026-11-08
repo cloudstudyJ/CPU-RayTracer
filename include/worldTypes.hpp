@@ -8,38 +8,50 @@
 #include <vector>
 
 enum class BxDFType: byte {
-    None       = 0x00,
-    Lambertian = 0x01,
-    Metal      = 0x02,
-    Dielectric = 0x03,
+    None       = 0,
+    Lambertian = 1 << 0,
+    Metal      = 1 << 1,
+    Dielectric = 1 << 2,
     Unknown    = 0xFF
 };
 enum class TextureSource: byte {
-    None     = 0x00,
-    Constant = 0x01,
-    Image    = 0x02,
+    None     = 0,
+    Constant = 1 << 0,
+    Image    = 1 << 1,
     Unknown  = 0xFF
 };
 enum class TextureType: byte {
-    None      = 0x00,
-    BaseColor = 0x01,
-    Normal    = 0x02,
-    ORM       = 0x03,   // Occlusion + Roughness + Metallic
+    None      = 0,
+    BaseColor = 1 << 0,
+    Normal    = 1 << 1,
+    Roughness = 1 << 2,
+    Metallic  = 1 << 3,
+    // Occlusion + Roughness + Metallic
+    ORM       = Roughness | Metallic,
     Unknown   = 0xFF
 };
 enum class GeometryType: byte {
-    None      = 0x00,
-    Sphere    = 0x01,
-    Rectangle = 0x02,
-    Cube      = 0x03,
+    None      = 0,
+    Sphere    = 1 << 0,
+    Rectangle = 1 << 1,
+    Cube      = 1 << 2,
     Unknown   = 0xFF
 };
 
-struct MetalDesc      { f32 roughness      {}; };
-struct DielectricDesc { f32 refractiveIndex{}; };
+struct MetalDesc {
+    f32 metallic { 1.0f };
+    f32 roughness{ 1.0f };
+};
+struct DielectricDesc {
+    f32 ior{ 1.0f };
+};
 
-struct ConstantTextureDesc { Vec3        color; };
-struct ImageTextureDesc { std::string file;  };
+struct ConstantTextureDesc {
+    Vec3 color;
+};
+struct ImageTextureDesc {
+    std::string file;
+};
 struct TextureDesc {
     TextureType   type;
     TextureSource src;
@@ -56,7 +68,9 @@ struct MaterialDesc {
     std::string name;
 };
 
-struct SphereDesc { f32  radius{}; };
+struct SphereDesc {
+    f32 radius{ 1.0f };
+};
 struct ObjectDesc {
     GeometryType geometryType;
 
@@ -70,7 +84,7 @@ struct ObjectDesc {
 
 struct LightDesc {
     Vec3 color;
-    f32  intensity{};
+    f32  intensity{ 1.0f };
 
     std::string objectName;
 };
