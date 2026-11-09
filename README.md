@@ -2,32 +2,6 @@
 
 An offline renderer written in C++, implementing Monte Carlo path tracing.
 
-## **Features**
-### **Rendering**
-- Multi-threaded rendering (dynamic row scheduling)
-- Stratified pixel sampling
-- NEE (Next Event Estimation)
-- MIS (Multiple Importance Sampling) using the power heuristic
-
-### **Materials**
-- Lambertian diffuse reflection
-- GGX microfacet reflection
-  - Smith masking-shadowing
-  - GGX VNDF sampling (Visible Normal Distribution Function)
-  - Schlick Fresnel approximation
-
-### **Textures**
-- Solid color
-- Image
-  - Diffuse albedo
-
-### **Geometry**
-- Sphere, rectangle, and cube
-  - Uniform surface sampling (sphere, rectangle)
-- BVH acceleration (Bounding Volume Hierarchy)
-  - Longest-axis selection
-  - Median splitting
-
 ## **Result**
 #### **Render Configuration**
 - Resolution = 1000x1000
@@ -39,6 +13,47 @@ An offline renderer written in C++, implementing Monte Carlo path tracing.
   <img src="result/roughness.png"/>
 </p>
 Average Render Time: 1032.004 [s] (17m 12s)
+
+#### **Metallic-Roughness Comparison**
+<p>
+  <img src="result/metallic-roughness.png"/>
+</p>
+Average Render Time: 1171.493 [s] (19m 31s)
+
+## **Features**
+### **Rendering**
+- Multi-threaded rendering (dynamic row scheduling)
+- Stratified pixel sampling
+- NEE (Next Event Estimation)
+- MIS (Multiple Importance Sampling) using the power heuristic
+
+### **Materials**
+- Diffuse
+  - Lambertian BRDF
+- Metal
+  - Metallic-Roughness
+    - Diffuse — Lambertian BRDF
+    - Specular — GGX microfacet BRDF
+      - Smith masking-shadowing
+      - GGX VNDF sampling (Visible Normal Distribution Function)
+      - Schlick Fresnel approximation
+
+### **Textures**
+- Constant color
+- Image
+  - Base Color
+  - Normal
+  - ORM
+    - R: Occlusion (Not used)
+    - G: Roughness
+    - B: Metallic
+
+### **Geometry**
+- Sphere, rectangle, and cube
+  - Uniform surface sampling (sphere, rectangle)
+- BVH acceleration (Bounding Volume Hierarchy)
+  - Longest-axis selection
+  - Median splitting
 
 ## **Configuration**
 ### **Rendering**
@@ -63,9 +78,45 @@ The default world configuration is located in the `resources/worlds` directory.
 
 The world is defined in JSON and contains the following components:
 - Camera
+  - Position (vec3)
+  - Look (vec3)
+  - FovY (float)
 - Materials
+  - Name (string)
+  - BxDF
+    - Type (string)
+      1. "Lambertian"
+      2. "Metal"
+    - Roughness (float)
+  - Textures
+    - Type (string)
+      1. "BaseColor"
+      2. "Normal"
+      3. "ORM"
+    - Source (string)
+      1. "Constant"
+      2. "Image"
+    - Color (vec3)
+    - File (string)
 - Objects
+  - Name (string)
+  - Geometry
+    - Type (string)
+      1. "Sphere"
+      2. "Rectangle"
+      3. "Cube"
+    - Radius (float)
+  - Transform
+    - Position (vec3)
+    - Rotation
+      - Axis (vec3)
+      - Angle (float)
+    - Scale (vec3)
+  - Material (string)
 - Lights
+  - Object (string)
+  - Color (vec3)
+  - Intensity (float)
 
 ## **Third-Party Libraries**
 1. [Image — stb](https://github.com/nothings/stb)

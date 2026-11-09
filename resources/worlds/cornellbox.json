@@ -7,46 +7,98 @@
     "Materials": [
         {
             "Name"   : "Wall_Green",
-            "BxDF"   : { "Type": "Lambertian" },
-            "Texture": {
-                "Type" : "Solid",
-                "Color": [0.12, 0.45, 0.15]
-            }
+            "BxDF"   : {
+                "Type": "Lambertian"
+            },
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Constant",
+                    "Color" : [0.12, 0.45, 0.15]
+                }
+            ]
         },
         {
             "Name"   : "Wall_Red",
-            "BxDF"   : { "Type": "Lambertian" },
-            "Texture": {
-                "Type" : "Solid",
-                "Color": [0.65, 0.05, 0.05]
-            }
+            "BxDF"   : {
+                "Type": "Lambertian"
+            },
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Constant",
+                    "Color" : [0.65, 0.05, 0.05]
+                }
+            ]
         },
         {
             "Name"   : "Wall_White",
-            "BxDF"   : { "Type": "Lambertian" },
-            "Texture": {
-                "Type" : "Solid",
-                "Color": [0.73, 0.73, 0.73]
-            }
+            "BxDF"   : {
+                "Type": "Lambertian"
+            },
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Constant",
+                    "Color" : [0.73, 0.73, 0.73]
+                }
+            ]
         },
         {
-            "Name"   : "Cube_Back",
+            "Name"   : "Metal_0",
             "BxDF"   : {
                 "Type"     : "Metal",
-                "Roughness": 0.15
+                "Metallic" : 1.0,
+                "Roughness": 0.1
             },
-            "Texture": {
-                "Type" : "Solid",
-                "Color": [0.2, 0.8, 0.8]
-            }
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Constant",
+                    "Color": [0.2, 0.8, 0.8]
+                }
+            ]
         },
         {
-            "Name"   : "Cube_Front",
+            "Name"   : "Metal_Plate_02",
+            "BxDF"   : {
+                "Type"     : "Metal",
+                "Metallic" : 1.0,
+                "Roughness": 0.67
+            },
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/metal_plate_02_2k/metal_plate_02_diff_2k.jpg"
+                },
+                {
+                    "Type"  : "Normal",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/metal_plate_02_2k/metal_plate_02_nor_gl_2k.jpg"
+                },
+                {
+                    "Type"  : "ORM",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/metal_plate_02_2k/metal_plate_02_arm_2k.jpg"
+                }
+            ]
+        },
+        {
+            "Name"   : "Japanese_Stone_Wall",
             "BxDF"   : { "Type": "Lambertian" },
-            "Texture": {
-                "Type": "Image",
-                "File": "./resources/textures/interior_tiles_2k/interior_tiles_diff_2k.jpg"
-            }
+            "Textures": [
+                {
+                    "Type"  : "BaseColor",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/japanese_stone_wall_2k/japanese_stone_wall_diff_2k.jpg"
+                },
+                {
+                    "Type"  : "Normal",
+                    "Source": "Image",
+                    "File"  : "./resources/textures/japanese_stone_wall_2k/japanese_stone_wall_nor_gl_2k.jpg"
+                }
+            ]
         }
     ],
     "Objects": [
@@ -113,7 +165,7 @@
                 },
                 "Scale"   : [2.0, 2.0, 1.0]
             },
-            "Material": "Wall_White"
+            "Material": "Metal_Plate_02"
         },
         {
             "Name"     : "Cube_Back",
@@ -126,7 +178,7 @@
                 },
                 "Scale"   : [0.6, 1.2, 0.6]
             },
-            "Material": "Cube_Back"
+            "Material": "Metal_0"
         },
         {
             "Name"     : "Cube_Front",
@@ -139,7 +191,7 @@
                 },
                 "Scale"   : [0.6, 0.6, 0.6]
             },
-            "Material": "Cube_Front"
+            "Material": "Japanese_Stone_Wall"
         },
         {
             "Name"     : "CeilLight",

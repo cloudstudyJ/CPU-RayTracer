@@ -11,10 +11,17 @@ namespace {
         return BxDFType::Unknown;
     }
     TextureType toTextureType(const std::string& str) {
-        if      (str == "Solid") return TextureType::Solid;
-        else if (str == "Image") return TextureType::Image;
+        if      (str == "BaseColor") return TextureType::BaseColor;
+        else if (str == "Normal"   ) return TextureType::Normal;
+        else if (str == "ORM"      ) return TextureType::ORM;
 
         return TextureType::Unknown;
+    }
+    TextureSource toTextureSource(const std::string& str) {
+        if      (str == "Constant") return TextureSource::Constant;
+        else if (str == "Image")    return TextureSource::Image;
+
+        return TextureSource::Unknown;
     }
     GeometryType toGeometryType(const std::string& str) {
         if      (str == "Sphere"   ) return GeometryType::Sphere;
@@ -58,20 +65,37 @@ namespace WorldLoader {
     MaterialDesc parseMaterial(const jsonValue& material) {
         using namespace JsonParser;
 
-        const jsonValue& bxdf    = material["BxDF"];
-        const jsonValue& texture = material["Texture"];
+        const jsonValue& bxdf     = material["BxDF"];
+        const jsonValue& textures = material["Textures"];
 
         MaterialDesc desc = {
-            .bxdfType    = toBxDFType(toString(bxdf["Type"])),
-            .textureType = toTextureType(toString(texture["Type"])),
-            .name        = toString(material["Name"]),
+            .bxdfType = toBxDFType(toString(bxdf["Type"])),
+            .name     = toString(material["Name"])
         };
 
-        if      (desc.bxdfType == BxDFType::Metal     ) desc.bxdfData = MetalDesc{toF32(bxdf["Roughness"])};
-        else if (desc.bxdfType == BxDFType::Dielectric) desc.bxdfData = DielectricDesc{toF32(bxdf["RefractiveIndex"])};
+        for (const auto& texture: textures.GetArray()) {
+            const auto texSrc = toTextureSource(toString(texture["Source"]));
 
-        if      (desc.textureType == TextureType::Solid) desc.textureData = SolidTextureDesc{toVec3(texture["Color"])};
-        else if (desc.textureType == TextureType::Image) desc.textureData = ImageTextureDesc{toString(texture["File"])};
+            TextureDesc texDesc = {
+                .type = toTextureType(toString(texture["Type"])),
+                .src  = texSrc
+            };
+
+            if      (texSrc == TextureSource::Constant) texDesc.data = ConstantTextureDesc{ toVec3(texture["Color"]) };
+            else if (texSrc == TextureSource::Image   ) texDesc.data = ImageTextureDesc{ toString(texture["File"])   };
+
+            desc.textures.push_back(std::move(texDesc));
+        }
+
+        if (desc.bxdfType == BxDFType::Metal) {
+            desc.bxdfDesc = MetalDesc{
+                .metallic  = toF32(bxdf["Metallic"]),
+                .roughness = toF32(bxdf["Roughness"])
+            };
+        }
+
+        else if (desc.bxdfType == BxDFType::Dielectric)
+            desc.bxdfDesc = DielectricDesc{toF32(bxdf["RefractiveIndex"])};
 
         return desc;
     }

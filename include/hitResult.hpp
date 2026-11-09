@@ -13,6 +13,8 @@ struct HitResult {
     f32           hitT       { INF_F32 };
     Vec2          uv;
     Vec3          hitPoint;
+    Vec3          tangent;
+    Vec3          bitangent;
     Vec3          normal;
     const Object* object     {};
 };
