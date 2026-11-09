@@ -7,7 +7,9 @@
     "Materials": [
         {
             "Name"   : "Wall_Green",
-            "BxDF"   : { "Type": "Lambertian" },
+            "BxDF"   : {
+                "Type": "Lambertian"
+            },
             "Textures": [
                 {
                     "Type"  : "BaseColor",
@@ -18,7 +20,9 @@
         },
         {
             "Name"   : "Wall_Red",
-            "BxDF"   : { "Type": "Lambertian" },
+            "BxDF"   : {
+                "Type": "Lambertian"
+            },
             "Textures": [
                 {
                     "Type"  : "BaseColor",
@@ -29,7 +33,9 @@
         },
         {
             "Name"   : "Wall_White",
-            "BxDF"   : { "Type": "Lambertian" },
+            "BxDF"   : {
+                "Type": "Lambertian"
+            },
             "Textures": [
                 {
                     "Type"  : "BaseColor",
@@ -39,26 +45,17 @@
             ]
         },
         {
-            "Name"   : "Metal_Plate",
+            "Name"   : "Metal_0",
             "BxDF"   : {
                 "Type"     : "Metal",
-                "Roughness": 0.5
+                "Metallic" : 1.0,
+                "Roughness": 0.1
             },
             "Textures": [
                 {
                     "Type"  : "BaseColor",
-                    "Source": "Image",
-                    "File"  : "./resources/textures/metal_plate_2k/metal_plate_diff_2k.jpg"
-                },
-                {
-                    "Type"  : "Normal",
-                    "Source": "Image",
-                    "File"  : "./resources/textures/metal_plate_2k/metal_plate_nor_gl_2k.jpg"
-                },
-                {
-                    "Type"  : "ORM",
-                    "Source": "Image",
-                    "File"  : "./resources/textures/metal_plate_2k/metal_plate_rough_2k.jpg"
+                    "Source": "Constant",
+                    "Color": [0.2, 0.8, 0.8]
                 }
             ]
         },
@@ -66,6 +63,7 @@
             "Name"   : "Metal_Plate_02",
             "BxDF"   : {
                 "Type"     : "Metal",
+                "Metallic" : 1.0,
                 "Roughness": 0.67
             },
             "Textures": [
@@ -128,7 +126,7 @@
                 },
                 "Scale"   : [2.0, 2.0, 1.0]
             },
-            "Material": "Metal_Plate"
+            "Material": "Wall_Red"
         },
         {
             "Name"     : "CornellBox_Ceil",
@@ -154,7 +152,7 @@
                 },
                 "Scale"   : [2.0, 2.0, 1.0]
             },
-            "Material": "Metal_Plate_02"
+            "Material": "Wall_White"
         },
         {
             "Name"     : "CornellBox_Back",
@@ -167,7 +165,7 @@
                 },
                 "Scale"   : [2.0, 2.0, 1.0]
             },
-            "Material": "Wall_White"
+            "Material": "Metal_Plate_02"
         },
         {
             "Name"     : "Cube_Back",
@@ -180,7 +178,7 @@
                 },
                 "Scale"   : [0.6, 1.2, 0.6]
             },
-            "Material": "Wall_Red"
+            "Material": "Metal_0"
         },
         {
             "Name"     : "Cube_Front",

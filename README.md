@@ -14,6 +14,12 @@ An offline renderer written in C++, implementing Monte Carlo path tracing.
 </p>
 Average Render Time: 1032.004 [s] (17m 12s)
 
+#### **Metallic-Roughness Comparison**
+<p>
+  <img src="result/metallic-roughness.png"/>
+</p>
+Average Render Time: 1171.493 [s] (19m 31s)
+
 ## **Features**
 ### **Rendering**
 - Multi-threaded rendering (dynamic row scheduling)
