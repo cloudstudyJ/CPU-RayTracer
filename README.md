@@ -2,34 +2,6 @@
 
 An offline renderer written in C++, implementing Monte Carlo path tracing.
 
-## **Features**
-### **Rendering**
-- Multi-threaded rendering (dynamic row scheduling)
-- Stratified pixel sampling
-- NEE (Next Event Estimation)
-- MIS (Multiple Importance Sampling) using the power heuristic
-
-### **Materials**
-- Lambertian diffuse reflection
-- GGX microfacet reflection
-  - Smith masking-shadowing
-  - GGX VNDF sampling (Visible Normal Distribution Function)
-  - Schlick Fresnel approximation
-
-### **Textures**
-- Constant color
-- Image
-  - Diffuse
-  - Normal
-  - Roughness
-
-### **Geometry**
-- Sphere, rectangle, and cube
-  - Uniform surface sampling (sphere, rectangle)
-- BVH acceleration (Bounding Volume Hierarchy)
-  - Longest-axis selection
-  - Median splitting
-
 ## **Result**
 #### **Render Configuration**
 - Resolution = 1000x1000
@@ -41,6 +13,41 @@ An offline renderer written in C++, implementing Monte Carlo path tracing.
   <img src="result/roughness.png"/>
 </p>
 Average Render Time: 1032.004 [s] (17m 12s)
+
+## **Features**
+### **Rendering**
+- Multi-threaded rendering (dynamic row scheduling)
+- Stratified pixel sampling
+- NEE (Next Event Estimation)
+- MIS (Multiple Importance Sampling) using the power heuristic
+
+### **Materials**
+- Diffuse
+  - Lambertian BRDF
+- Metal
+  - Metallic-Roughness
+    - Diffuse — Lambertian BRDF
+    - Specular — GGX microfacet BRDF
+      - Smith masking-shadowing
+      - GGX VNDF sampling (Visible Normal Distribution Function)
+      - Schlick Fresnel approximation
+
+### **Textures**
+- Constant color
+- Image
+  - Base Color
+  - Normal
+  - ORM
+    - R: Occlusion (Not used)
+    - G: Roughness
+    - B: Metallic
+
+### **Geometry**
+- Sphere, rectangle, and cube
+  - Uniform surface sampling (sphere, rectangle)
+- BVH acceleration (Bounding Volume Hierarchy)
+  - Longest-axis selection
+  - Median splitting
 
 ## **Configuration**
 ### **Rendering**
