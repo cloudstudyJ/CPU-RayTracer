@@ -6,6 +6,8 @@
 #include "math/math.hpp"
 #include "ray.hpp"
 
+#include <cmath>
+
 HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, const f32 tMax) {
     const Vec3 spherePos = sphere.transform().position;
     const f32  radius    = sphere.radius();
@@ -106,30 +108,13 @@ HitResult Solver::hitTest(const Ray& ray, const Rectangle& rect, const f32 tMin,
     return hitResult;
 }
 
-bool Solver::isIntersect(const Ray& ray, const AABB& aabb, f32 tMin, f32 tMax) {
-    for (u32 axis = 0; axis < 3; ++axis) {
-        const f32 rayO    = ray.origin.data[axis];
-        const f32 rayD    = ray.direction.data[axis];
-        const f32 axisMin = aabb.min.data[axis];
-        const f32 axisMax = aabb.max.data[axis];
+bool Solver::isIntersect(const TraversalRay& ray, const AABB& aabb, f32 tMin, f32 tMax) {
+    for (u32 i = 0; i < 3; ++i) {
+        const f32 t0 = std::fma(aabb.min.data[i], ray.invDir.data[i], -ray.orgInvDir.data[i]);
+        const f32 t1 = std::fma(aabb.max.data[i], ray.invDir.data[i], -ray.orgInvDir.data[i]);
 
-        if ((rayD * rayD) < 1.0E-12f) {
-            if (!Utility::isInClosedRange(rayO, axisMin, axisMax))
-                return false;
-
-            continue;
-        }
-
-        const f32 invDir = 1 / rayD;
-
-        f32 t0 = (axisMin - rayO) * invDir;
-        f32 t1 = (axisMax - rayO) * invDir;
-
-        if (t0 > t1)
-            Utility::swap(t0, t1);
-
-        tMin = Utility::max(tMin, t0);
-        tMax = Utility::min(tMax, t1);
+        tMin = Utility::max(tMin, Utility::min(t0, t1));
+        tMax = Utility::min(tMax, Utility::max(t0, t1));
 
         if (tMax < tMin)
             return false;
