@@ -6,8 +6,6 @@
 #include "math/math.hpp"
 #include "ray.hpp"
 
-#include <cmath>
-
 HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, const f32 tMax) {
     const Vec3 spherePos = sphere.transform().position;
     const f32  radius    = sphere.radius();
@@ -110,8 +108,8 @@ HitResult Solver::hitTest(const Ray& ray, const Rectangle& rect, const f32 tMin,
 
 bool Solver::isIntersect(const TraversalRay& ray, const AABB& aabb, f32 tMin, f32 tMax) {
     for (u32 i = 0; i < 3; ++i) {
-        const f32 t0 = std::fma(aabb.min.data[i], ray.invDir.data[i], -ray.orgInvDir.data[i]);
-        const f32 t1 = std::fma(aabb.max.data[i], ray.invDir.data[i], -ray.orgInvDir.data[i]);
+        const f32 t0 = Math::fma(aabb.min.data[i], ray.invDir.data[i], -ray.orgInvDir.data[i]);
+        const f32 t1 = Math::fma(aabb.max.data[i], ray.invDir.data[i], -ray.orgInvDir.data[i]);
 
         tMin = Utility::max(tMin, Utility::min(t0, t1));
         tMax = Utility::min(tMax, Utility::max(t0, t1));
