@@ -27,7 +27,7 @@ Cube::Cube(const Transform& transform, std::shared_ptr<const Material> material)
         mAABB = AABB::unite(mAABB, mFaces[i].aabb());
 }
 
-bool Cube::isAnyHit(const Ray& ray, const f32 tMin, const f32 tMax) const {
+bool Cube::isAnyHit(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept {
     for (const auto& quad: mFaces) {
         if (quad.isAnyHit(ray, tMin, tMax))
             return true;
