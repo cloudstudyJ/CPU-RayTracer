@@ -34,6 +34,7 @@ class AccelerationStructure {
         void build(const std::vector<std::unique_ptr<Object>>& objects);
         void clear() noexcept;
 
+        bool      isAnyHit(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept;
         HitResult hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept;
 
     private:

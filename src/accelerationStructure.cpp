@@ -73,7 +73,43 @@ void AccelerationStructure::clear() noexcept {
     mRoot = {};
 }
 
+bool AccelerationStructure::isAnyHit(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept {
+    if (!mRoot)
+        return false;
+
+    TraversalRay traversalRay(ray);
+
+    if (!Solver::isIntersect(traversalRay, mRoot->aabb, tMin, tMax))
+        return false;
+
+    Node* stk[128];
+
+    u32 ptr{};
+    stk[ptr++] = mRoot;
+
+    while (ptr) {
+        Node* node = stk[--ptr];
+
+        if (node->obj) {
+            if (node->obj->isAnyHit(ray, tMin, tMax))
+                return true;
+
+            continue;
+        }
+
+        Node* l = node->left;
+        Node* r = node->right;
+
+        if (r && Solver::isIntersect(traversalRay, r->aabb, tMin, tMax)) stk[ptr++] = r;
+        if (l && Solver::isIntersect(traversalRay, l->aabb, tMin, tMax)) stk[ptr++] = l;
+    }
+
+    return false;
+}
 HitResult AccelerationStructure::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept {
+    if (!mRoot)
+        return {};
+
     Node* stk[128];
 
     u32 ptr{};
