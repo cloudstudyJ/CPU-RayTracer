@@ -27,6 +27,14 @@ Cube::Cube(const Transform& transform, std::shared_ptr<const Material> material)
         mAABB = AABB::unite(mAABB, mFaces[i].aabb());
 }
 
+bool Cube::isAnyHit(const Ray& ray, const f32 tMin, const f32 tMax) const {
+    for (const auto& quad: mFaces) {
+        if (quad.isAnyHit(ray, tMin, tMax))
+            return true;
+    }
+
+    return false;
+}
 HitResult Cube::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const {
     HitResult hitResult;
     hitResult.hitT = tMax;

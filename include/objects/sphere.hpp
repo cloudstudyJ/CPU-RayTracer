@@ -7,6 +7,7 @@ class Sphere: public Object {
         Sphere() noexcept;
         Sphere(const Transform& transform, const f32 r, std::shared_ptr<const Material> material = {}) noexcept;
 
+        bool      isAnyHit(const Ray& ray, const f32 tMin, const f32 tMax) const override;
         HitResult hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const override;
 
         f32 radius() const noexcept { return mRadius; }
