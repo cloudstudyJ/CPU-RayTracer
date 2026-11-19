@@ -128,7 +128,7 @@ namespace Solver {
         const f32 near      = h - sqrtD;
         const f32 far       = h + sqrtD;
 
-        if ((near > scaledMax) && (far < scaledMin))
+        if ((near > scaledMax) || (far < scaledMin))
             return false;
 
         return ((near >= scaledMin) || (far <= scaledMax));
