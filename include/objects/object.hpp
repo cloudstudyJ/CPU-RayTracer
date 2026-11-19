@@ -14,6 +14,7 @@ class Object {
     public:
         virtual ~Object() noexcept = default;
 
+        virtual bool      isAnyHit(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept = 0;
         virtual HitResult hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const = 0;
 
         Transform transform() const noexcept { return mTransform; }

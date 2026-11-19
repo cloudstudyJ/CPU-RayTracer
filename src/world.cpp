@@ -28,7 +28,16 @@ World& World::operator=(World&& other) noexcept {
     return *this;
 }
 
-void World::addCamera(const Camera& camera) noexcept { mMainCamera = camera; }
+void World::buildAccelerationStructure() {
+    mAS.build(mObjects);
+}
+
+void World::addLight(Object* obj, const Light& lightInfo) {
+    mLights.push_back(std::pair<Object*, Light>(obj, lightInfo));
+}
+void World::addCamera(const Camera& camera) noexcept {
+    mMainCamera = camera;
+}
 void World::clearObjects() noexcept {
     mAS.clear();
     mObjects.clear();
@@ -36,5 +45,8 @@ void World::clearObjects() noexcept {
 }
 
 bool World::isOccluded(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept {
-    return traceRay(ray, tMin, tMax).isHit;
+    return mAS.isAnyHit(ray, tMin, tMax);
+}
+HitResult World::traceRay(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept {
+    return mAS.hitTest(ray, tMin, tMax);
 }

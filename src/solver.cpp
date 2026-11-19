@@ -6,134 +6,169 @@
 #include "math/math.hpp"
 #include "ray.hpp"
 
-HitResult Solver::hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, const f32 tMax) {
-    const Vec3 spherePos = sphere.transform().position;
-    const f32  radius    = sphere.radius();
+namespace Solver {
+    HitResult hitTest(const Ray& ray, const Sphere& sphere, const f32 tMin, const f32 tMax) {
+        const Vec3 spherePos = sphere.transform().position;
+        const f32  radius    = sphere.radius();
 
-    Vec3 ac = spherePos - ray.origin;
-    f32  a  = ray.direction.lengthSquare();
-    f32  h  = Vec3::dot(ray.direction, ac);
-    f32  c  = ac.lengthSquare() - radius * radius;
+        Vec3 ac = spherePos - ray.origin;
+        f32  a  = ray.direction.lengthSquare();
+        f32  h  = Vec3::dot(ray.direction, ac);
+        f32  c  = ac.lengthSquare() - (radius * radius);
 
-    f32 discriminant = h * h - a * c;
-    if (discriminant < -EPS_F32)
-        return {};
+        f32 discriminant = h * h - a * c;
 
-    f32 sqrtD = Math::sqrt(Utility::max(0.0f, discriminant));
-    f32 invA  = 1 / a;
-    f32 t0    = (h - sqrtD) * invA;
-    f32 t1    = (h + sqrtD) * invA;
+        if (discriminant < -EPS_F32)
+            return {};
 
-    if (t0 > tMax || t1 < tMin)
-        return {};
+        f32 sqrtD = Math::sqrt(Utility::max(0.0f, discriminant));
+        f32 invA  = 1 / a;
+        f32 t0    = (h - sqrtD) * invA;
+        f32 t1    = (h + sqrtD) * invA;
 
-    f32  t = ((t0 >= tMin) ? t0 : t1);
+        if (t0 > tMax || t1 < tMin)
+            return {};
 
-    if (t > tMax)
-        return {};
+        f32  t = ((t0 >= tMin) ? t0 : t1);
 
-    Vec3 hitP        = ray.at(t);
-    Vec3 outN        = (hitP - spherePos) / radius;
-    bool isFrontFace = (Vec3::dot(ray.direction, outN) < 0.0f);
+        if (t > tMax)
+            return {};
 
-    f32 phi = Math::arctan2(-outN.z, outN.x);
+        Vec3 hitP        = ray.at(t);
+        Vec3 outN        = (hitP - spherePos) / radius;
+        bool isFrontFace = (Vec3::dot(ray.direction, outN) < 0.0f);
 
-    if (phi < 0.0f)
-        phi += Math::TWO_PI;
+        f32 phi = Math::arctan2(-outN.z, outN.x);
 
-    const Vec3 tangent   = { -Math::sin(phi), 0.0f, -Math::cos(phi) };
-    const Vec3 bitangent = Vec3::cross(outN, tangent);
+        if (phi < 0.0f)
+            phi += Math::TWO_PI;
 
-    HitResult hitResult {
-        .isHit       = true,
-        .isFrontFace = isFrontFace,
-        .hitT        = t,
-        .uv          = {
-            .u = phi * Math::INV_TWO_PI,
-            .v = Math::arccos(-outN.y) * Math::INV_PI
-        },
-        .hitPoint    = hitP,
-        .tangent     = tangent,
-        .bitangent   = (isFrontFace ? bitangent : -bitangent),
-        .normal      = (isFrontFace ? outN : -outN),
-        .object      = &sphere
-    };
+        const Vec3 tangent   = { -Math::sin(phi), 0.0f, -Math::cos(phi) };
+        const Vec3 bitangent = Vec3::cross(outN, tangent);
 
-    return hitResult;
-}
-HitResult Solver::hitTest(const Ray& ray, const Rectangle& rect, const f32 tMin, const f32 tMax) {
-    const Vec3 pos = rect.transform().position;
-    const Vec3 u   = rect.edgeU();
-    const Vec3 v   = rect.edgeV();
-    const Vec3 n   = Vec3::cross(u, v);
+        HitResult hitResult {
+            .isHit       = true,
+            .isFrontFace = isFrontFace,
+            .hitT        = t,
+            .uv          = {
+                .u = phi * Math::INV_TWO_PI,
+                .v = Math::arccos(-outN.y) * Math::INV_PI
+            },
+            .hitPoint    = hitP,
+            .tangent     = tangent,
+            .bitangent   = (isFrontFace ? bitangent : -bitangent),
+            .normal      = (isFrontFace ? outN : -outN),
+            .object      = &sphere
+        };
 
-    f32 denom = Vec3::dot(n, ray.direction);
-    if (Math::abs(denom) < EPS_F32)
-        return {};
+        return hitResult;
+    }
+    HitResult hitTest(const Ray& ray, const Rectangle& rect, const f32 tMin, const f32 tMax) {
+        const Vec3 pos = rect.transform().position;
+        const Vec3 u   = rect.edgeU();
+        const Vec3 v   = rect.edgeV();
+        const Vec3 n   = Vec3::cross(u, v);
 
-    f32 t = Vec3::dot(n, pos - ray.origin) / denom;
-    if (t < tMin || t > tMax)
-        return {};
+        f32 denom = Vec3::dot(n, ray.direction);
+        if (Math::abs(denom) < EPS_F32)
+            return {};
 
-    Vec3 hitP = ray.at(t);
-    Vec3 p    = hitP - pos;
-    Vec3 w    = n / n.lengthSquare();
+        f32 t = Vec3::dot(n, pos - ray.origin) / denom;
+        if (t < tMin || t > tMax)
+            return {};
 
-    f32 a = Vec3::dot(w, Vec3::cross(p, v));
-    f32 b = Vec3::dot(w, Vec3::cross(u, p));
-    if ((a < -0.5f) || (a > 0.5f) || (b < -0.5f) || (b > 0.5f))
-        return {};
+        Vec3 hitP = ray.at(t);
+        Vec3 p    = hitP - pos;
+        Vec3 w    = n / n.lengthSquare();
 
-    Vec3 outN        = n.normalized();
-    Vec3 bitangent   = v.normalized();
-    bool isFrontFace = (Vec3::dot(ray.direction, outN) < 0.0f);
+        f32 a = Vec3::dot(w, Vec3::cross(p, v));
+        f32 b = Vec3::dot(w, Vec3::cross(u, p));
+        if ((a < -0.5f) || (a > 0.5f) || (b < -0.5f) || (b > 0.5f))
+            return {};
 
-    HitResult hitResult {
-        .isHit       = true,
-        .isFrontFace = isFrontFace,
-        .hitT        = t,
-        .uv          = {
-            .u = a + 0.5f,
-            .v = b + 0.5f
-        },
-        .hitPoint    = hitP,
-        .tangent     = u.normalized(),
-        .bitangent   = (isFrontFace ? bitangent : -bitangent),
-        .normal      = (isFrontFace ? outN : -outN),
-        .object      = &rect
-    };
+        Vec3 outN        = n.normalized();
+        Vec3 bitangent   = v.normalized();
+        bool isFrontFace = (Vec3::dot(ray.direction, outN) < 0.0f);
 
-    return hitResult;
-}
+        HitResult hitResult {
+            .isHit       = true,
+            .isFrontFace = isFrontFace,
+            .hitT        = t,
+            .uv          = {
+                .u = a + 0.5f,
+                .v = b + 0.5f
+            },
+            .hitPoint    = hitP,
+            .tangent     = u.normalized(),
+            .bitangent   = (isFrontFace ? bitangent : -bitangent),
+            .normal      = (isFrontFace ? outN : -outN),
+            .object      = &rect
+        };
 
-bool Solver::isIntersect(const Ray& ray, const AABB& aabb, f32 tMin, f32 tMax) {
-    for (u32 axis = 0; axis < 3; ++axis) {
-        const f32 rayO    = ray.origin.data[axis];
-        const f32 rayD    = ray.direction.data[axis];
-        const f32 axisMin = aabb.min.data[axis];
-        const f32 axisMax = aabb.max.data[axis];
-
-        if ((rayD * rayD) < 1.0E-12f) {
-            if (!Utility::isInClosedRange(rayO, axisMin, axisMax))
-                return false;
-
-            continue;
-        }
-
-        const f32 invDir = 1 / rayD;
-
-        f32 t0 = (axisMin - rayO) * invDir;
-        f32 t1 = (axisMax - rayO) * invDir;
-
-        if (t0 > t1)
-            Utility::swap(t0, t1);
-
-        tMin = Utility::max(tMin, t0);
-        tMax = Utility::min(tMax, t1);
-
-        if (tMax < tMin)
-            return false;
+        return hitResult;
     }
 
-    return true;
+    bool isAnyHit(const Ray& ray, const Sphere& sphere, const f32 tMin, const f32 tMax) {
+        const Vec3 spherePos = sphere.transform().position;
+        const f32  radius    = sphere.radius();
+
+        const Vec3 ac = spherePos - ray.origin;
+        const f32  a  = ray.direction.lengthSquare();
+        const f32  h  = Vec3::dot(ray.direction, ac);
+        const f32  c  = ac.lengthSquare() - (radius * radius);
+
+        const f32 discriminant = h * h - a * c;
+
+        if (discriminant < -EPS_F32)
+            return false;
+
+        const f32 sqrtD     = Math::sqrt(Utility::max(0.0f, discriminant));
+        const f32 scaledMin = tMin * a;
+        const f32 scaledMax = tMax * a;
+        const f32 near      = h - sqrtD;
+        const f32 far       = h + sqrtD;
+
+        if ((near > scaledMax) || (far < scaledMin))
+            return false;
+
+        return ((near >= scaledMin) || (far <= scaledMax));
+    }
+    bool isAnyHit(const Ray& ray, const Rectangle& rect, const f32 tMin, const f32 tMax) {
+        const Vec3 pos = rect.transform().position;
+        const Vec3 u   = rect.edgeU();
+        const Vec3 v   = rect.edgeV();
+        const Vec3 n   = Vec3::cross(u, v);
+
+        const f32 denom = Vec3::dot(n, ray.direction);
+        if (Math::abs(denom) < EPS_F32)
+            return false;
+
+        const f32 t = Vec3::dot(n, pos - ray.origin) / denom;
+        if (t < tMin || t > tMax)
+            return false;
+
+        const Vec3 p         = ray.at(t) - pos;
+        const f32  nSQ       = n.lengthSquare();
+        const f32  halfBound = 0.5f * nSQ;
+
+        const f32 a = Vec3::dot(n, Vec3::cross(p, v));
+        const f32 b = Vec3::dot(n, Vec3::cross(u, p));
+
+        return ((Math::abs(a) <= halfBound) && (Math::abs(b) <= halfBound));
+    }
+
+    bool isIntersect(const TraversalRay& ray, const AABB& aabb, f32 tMin, f32 tMax) {
+        for (u32 i = 0; i < 3; ++i) {
+            const f32 t0 = Math::fma(aabb.min.data[i], ray.invDir.data[i], -ray.orgInvDir.data[i]);
+            const f32 t1 = Math::fma(aabb.max.data[i], ray.invDir.data[i], -ray.orgInvDir.data[i]);
+
+            tMin = Utility::max(tMin, Utility::min(t0, t1));
+            tMax = Utility::min(tMax, Utility::max(t0, t1));
+
+            if (tMax < tMin)
+                return false;
+        }
+
+        return true;
+    }
 }

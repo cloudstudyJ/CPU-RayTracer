@@ -1,5 +1,6 @@
 #include "math/math.hpp"
 
+#ifndef __GNUC__
 #include <cmath>
 
 namespace Math {
@@ -11,6 +12,9 @@ namespace Math {
     }
     f32 sqrt(const f32 val) noexcept {
         return std::sqrt(val);
+    }
+    f32 fma(const f32 x, const f32 y, const f32 z) noexcept {
+        return std::fma(x, y, z);
     }
     f32 sin(const f32 rad) noexcept {
         return std::sin(rad);
@@ -28,3 +32,4 @@ namespace Math {
         return std::atan2(y, x);
     }
 }
+#endif

@@ -22,21 +22,20 @@ class World {
 
         World& operator=(World&& other) noexcept;
 
-        void buildAccelerationStructure() { mAS.build(mObjects); }
+        void buildAccelerationStructure();
 
         template <typename T, typename ... Args>
         T* addObject(Args&& ... args);
 
-        void addLight(Object* obj, const Light& lightInfo) { mLights.push_back(std::pair<Object*, Light>(obj, lightInfo)); }
+        void addLight(Object* obj, const Light& lightInfo);
         void addCamera(const Camera& camera) noexcept;
         void clearObjects() noexcept;
 
-        HitResult traceRay(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept { return mAS.hitTest(ray, tMin, tMax); }
+        bool      isOccluded(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept;
+        HitResult traceRay(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept;
 
         const Camera& getMainCamera() const noexcept { return mMainCamera; }
         const std::vector<std::pair<Object*, Light>>& getLights() const noexcept { return mLights; }
-
-        bool isOccluded(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept;
 
     private:
         Camera                mMainCamera;

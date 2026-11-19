@@ -18,8 +18,18 @@ Rectangle::Rectangle(const Transform& transform, std::shared_ptr<const Material>
 Rectangle::Rectangle(const Vec3& pos, const Vec3& u, const Vec3& v, std::shared_ptr<const Material> material) noexcept
     : Object({ .position = pos, .scale = { .data = { 1.0f, 1.0f, 1.0f } } }, material) { build(pos, u, v); }
 
+bool Rectangle::isAnyHit(const Ray& ray, const f32 tMin, const f32 tMax) const noexcept {
+    return Solver::isAnyHit(ray, *this, tMin, tMax);
+}
 HitResult Rectangle::hitTest(const Ray& ray, const f32 tMin, const f32 tMax) const {
     return Solver::hitTest(ray, *this, tMin, tMax);
+}
+
+Vec3 Rectangle::edgeU() const noexcept {
+    return mU;
+}
+Vec3 Rectangle::edgeV() const noexcept {
+    return mV;
 }
 
 // p3 ------ p2
@@ -48,7 +58,7 @@ void Rectangle::build(const Vec3& pos, const Vec3& u, const Vec3& v) noexcept {
         max.z = Utility::max(max.z, v.z);
     }
 
-    mU    = u;
-    mV    = v;
-    mAABB = { min, max };
+    mU      = u;
+    mV      = v;
+    mAABB   = { min, max };
 }
