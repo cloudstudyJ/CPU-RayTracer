@@ -13,6 +13,9 @@ class Rectangle: public Object {
 
         Vec3 edgeU() const noexcept;
         Vec3 edgeV() const noexcept;
+        Vec3 tangent() const noexcept;
+        Vec3 bitangent() const noexcept;
+        Vec3 normal() const noexcept;
 
     private:
         void build(const Vec3& pos, const Vec3& u, const Vec3& v) noexcept;
@@ -20,4 +23,7 @@ class Rectangle: public Object {
     private:
         Vec3 mU;
         Vec3 mV;
+        Vec3 mTangent;
+        Vec3 mBitangent;
+        Vec3 mNormal;
 };

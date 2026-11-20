@@ -86,8 +86,8 @@ namespace Solver {
         if ((a < -0.5f) || (a > 0.5f) || (b < -0.5f) || (b > 0.5f))
             return {};
 
-        Vec3 outN        = n.normalized();
-        Vec3 bitangent   = v.normalized();
+        Vec3 outN        = rect.normal();
+        Vec3 bitangent   = rect.bitangent();
         bool isFrontFace = (Vec3::dot(ray.direction, outN) < 0.0f);
 
         HitResult hitResult {
@@ -99,7 +99,7 @@ namespace Solver {
                 .v = b + 0.5f
             },
             .hitPoint    = hitP,
-            .tangent     = u.normalized(),
+            .tangent     = rect.tangent(),
             .bitangent   = (isFrontFace ? bitangent : -bitangent),
             .normal      = (isFrontFace ? outN : -outN),
             .object      = &rect

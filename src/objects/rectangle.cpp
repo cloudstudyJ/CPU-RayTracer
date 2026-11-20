@@ -31,6 +31,15 @@ Vec3 Rectangle::edgeU() const noexcept {
 Vec3 Rectangle::edgeV() const noexcept {
     return mV;
 }
+Vec3 Rectangle::tangent() const noexcept {
+    return mTangent;
+}
+Vec3 Rectangle::bitangent() const noexcept {
+    return mBitangent;
+}
+Vec3 Rectangle::normal() const noexcept {
+    return mNormal;
+}
 
 // p3 ------ p2
 // |         |
@@ -58,7 +67,10 @@ void Rectangle::build(const Vec3& pos, const Vec3& u, const Vec3& v) noexcept {
         max.z = Utility::max(max.z, v.z);
     }
 
-    mU      = u;
-    mV      = v;
-    mAABB   = { min, max };
+    mU         = u;
+    mV         = v;
+    mNormal    = Vec3::cross(u, v).normalized();
+    mTangent   = u.normalized();
+    mBitangent = Vec3::cross(mNormal, mTangent);
+    mAABB       = { min, max };
 }
